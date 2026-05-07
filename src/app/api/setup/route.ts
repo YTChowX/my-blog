@@ -2,13 +2,17 @@ import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import bcrypt from "bcryptjs"
 
+async function runSql(sql: string) {
+  await prisma.$executeRawUnsafe(sql)
+}
+
 export async function GET() {
   const results: string[] = []
 
   try {
-    // 第一步：创建数据库表
+    // 创建 users 表
     try {
-      await prisma.$executeRawUnsafe(`
+      await runSql(`
         CREATE TABLE IF NOT EXISTS "users" (
           "id" TEXT NOT NULL PRIMARY KEY,
           "email" TEXT NOT NULL,
@@ -19,16 +23,22 @@ export async function GET() {
           "emailVerified" TIMESTAMP(3),
           "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
           "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
-        );
-        CREATE UNIQUE INDEX IF NOT EXISTS "users_email_key" ON "users"("email");
+        )
       `)
       results.push("✅ users 表创建成功")
     } catch (e: any) {
-      results.push("⚠️ users 表: " + e.message)
+      results.push("⚠️ users 表: " + e.message.substring(0, 100))
     }
 
     try {
-      await prisma.$executeRawUnsafe(`
+      await runSql(`CREATE UNIQUE INDEX IF NOT EXISTS "users_email_key" ON "users"("email")`)
+    } catch (e: any) {
+      // ignore
+    }
+
+    // 创建 accounts 表
+    try {
+      await runSql(`
         CREATE TABLE IF NOT EXISTS "accounts" (
           "id" TEXT NOT NULL PRIMARY KEY,
           "userId" TEXT NOT NULL,
@@ -43,32 +53,44 @@ export async function GET() {
           "id_token" TEXT,
           "session_state" TEXT,
           CONSTRAINT "accounts_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE
-        );
-        CREATE UNIQUE INDEX IF NOT EXISTS "accounts_provider_providerAccountId_key" ON "accounts"("provider", "providerAccountId");
+        )
       `)
       results.push("✅ accounts 表创建成功")
     } catch (e: any) {
-      results.push("⚠️ accounts 表: " + e.message)
+      results.push("⚠️ accounts 表: " + e.message.substring(0, 100))
     }
 
     try {
-      await prisma.$executeRawUnsafe(`
+      await runSql(`CREATE UNIQUE INDEX IF NOT EXISTS "accounts_provider_providerAccountId_key" ON "accounts"("provider", "providerAccountId")`)
+    } catch (e: any) {
+      // ignore
+    }
+
+    // 创建 sessions 表
+    try {
+      await runSql(`
         CREATE TABLE IF NOT EXISTS "sessions" (
           "id" TEXT NOT NULL PRIMARY KEY,
           "sessionToken" TEXT NOT NULL,
           "userId" TEXT NOT NULL,
           "expires" TIMESTAMP(3) NOT NULL,
           CONSTRAINT "sessions_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE
-        );
-        CREATE UNIQUE INDEX IF NOT EXISTS "sessions_sessionToken_key" ON "sessions"("sessionToken");
+        )
       `)
       results.push("✅ sessions 表创建成功")
     } catch (e: any) {
-      results.push("⚠️ sessions 表: " + e.message)
+      results.push("⚠️ sessions 表: " + e.message.substring(0, 100))
     }
 
     try {
-      await prisma.$executeRawUnsafe(`
+      await runSql(`CREATE UNIQUE INDEX IF NOT EXISTS "sessions_sessionToken_key" ON "sessions"("sessionToken")`)
+    } catch (e: any) {
+      // ignore
+    }
+
+    // 创建 posts 表
+    try {
+      await runSql(`
         CREATE TABLE IF NOT EXISTS "posts" (
           "id" TEXT NOT NULL PRIMARY KEY,
           "title" TEXT NOT NULL,
@@ -84,17 +106,24 @@ export async function GET() {
           "viewCount" INTEGER NOT NULL DEFAULT 0,
           "coverImage" TEXT,
           CONSTRAINT "posts_authorId_fkey" FOREIGN KEY ("authorId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE
-        );
-        CREATE UNIQUE INDEX IF NOT EXISTS "posts_slug_key" ON "posts"("slug");
-        CREATE INDEX IF NOT EXISTS "posts_published_idx" ON "posts"("published");
-        CREATE INDEX IF NOT EXISTS "posts_category_idx" ON "posts"("category");
+        )
       `)
       results.push("✅ posts 表创建成功")
     } catch (e: any) {
-      results.push("⚠️ posts 表: " + e.message)
+      results.push("⚠️ posts 表: " + e.message.substring(0, 100))
     }
 
-    // 第二步：创建管理员账户
+    try {
+      await runSql(`CREATE UNIQUE INDEX IF NOT EXISTS "posts_slug_key" ON "posts"("slug")`)
+    } catch (e: any) { /* ignore */ }
+    try {
+      await runSql(`CREATE INDEX IF NOT EXISTS "posts_published_idx" ON "posts"("published")`)
+    } catch (e: any) { /* ignore */ }
+    try {
+      await runSql(`CREATE INDEX IF NOT EXISTS "posts_category_idx" ON "posts"("category")`)
+    } catch (e: any) { /* ignore */ }
+
+    // 创建管理员账户
     try {
       const existingAdmin = await prisma.user.findFirst({
         where: { role: "ADMIN" },
@@ -122,7 +151,7 @@ export async function GET() {
         }
       }
     } catch (e: any) {
-      results.push("❌ 管理员创建失败: " + e.message)
+      results.push("❌ 管理员创建失败: " + e.message.substring(0, 100))
     }
 
     return NextResponse.json({
