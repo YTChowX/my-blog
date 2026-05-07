@@ -1,8 +1,8 @@
 import NextAuth from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
 import bcrypt from "bcryptjs"
-import { prisma } from "./prisma"
 import { z } from "zod"
+import { pgPool } from "@/lib/db"
 
 const credentialsSchema = z.object({
   email: z.string().email(),
@@ -10,14 +10,14 @@ const credentialsSchema = z.object({
 })
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  // 不使用 adapter — JWT 策略不需要数据库存储 session
+  secret: process.env.NEXTAUTH_SECRET,
+  trustHost: true,
   session: {
     strategy: "jwt",
     maxAge: 30 * 24 * 60 * 60,
   },
   pages: {
     signIn: "/auth/signin",
-    error: "/auth/error",
   },
   providers: [
     CredentialsProvider({
@@ -30,13 +30,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         try {
           const { email, password } = credentialsSchema.parse(credentials)
 
-          // 使用原始 SQL 查询用户（避免 Prisma ORM 在 Neon 上的问题）
-          const users: any[] = await prisma.$queryRawUnsafe(
+          const result = await pgPool.query(
             `SELECT * FROM "users" WHERE "email" = $1 LIMIT 1`,
-            email
+            [email]
           )
 
-          const user = users[0]
+          const user = result.rows[0]
 
           if (!user || !user.password) {
             return null
@@ -55,7 +54,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             image: user.image,
             role: user.role,
           }
-        } catch {
+        } catch (err) {
+          console.error("Authorize error:", err)
           return null
         }
       },
@@ -79,7 +79,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   },
 })
 
-// NextAuth v5 类型扩展
 declare module "next-auth" {
   interface Session {
     user: {

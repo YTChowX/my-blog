@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
-import { prisma } from "@/lib/prisma"
+import { pgPool } from "@/lib/db"
 import { z } from "zod"
 import { randomUUID } from "crypto"
 
@@ -14,11 +14,9 @@ const postSchema = z.object({
   published: z.boolean().default(false),
 })
 
-// 创建文章
 export async function POST(req: NextRequest) {
   try {
     const session = await auth()
-
     if (!session || session.user.role !== "ADMIN") {
       return NextResponse.json({ error: "未授权" }, { status: 401 })
     }
@@ -26,24 +24,16 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
     const data = postSchema.parse(body)
 
-    // 检查 slug 是否已存在
-    const existing: any[] = await prisma.$queryRawUnsafe(
-      `SELECT id FROM "posts" WHERE "slug" = $1 LIMIT 1`,
-      data.slug
-    )
-
-    if (existing.length > 0) {
+    const existing = await pgPool.query(`SELECT id FROM "posts" WHERE "slug" = $1 LIMIT 1`, [data.slug])
+    if (existing.rows.length > 0) {
       return NextResponse.json({ error: "Slug 已存在" }, { status: 400 })
     }
 
     const id = randomUUID()
-    const tagsJson = JSON.stringify(data.tags)
-
-    await prisma.$executeRawUnsafe(
+    await pgPool.query(
       `INSERT INTO "posts" ("id", "title", "slug", "content", "excerpt", "published", "category", "tags", "authorId")
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8::jsonb, $9)`,
-      id, data.title, data.slug, data.content, data.excerpt || null,
-      data.published, data.category, tagsJson, session.user.id
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+      [id, data.title, data.slug, data.content, data.excerpt || null, data.published, data.category, JSON.stringify(data.tags), session.user.id]
     )
 
     return NextResponse.json({ id, success: true }, { status: 201 })
@@ -55,7 +45,6 @@ export async function POST(req: NextRequest) {
   }
 }
 
-// 获取文章列表
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url)
@@ -64,20 +53,19 @@ export async function GET(req: NextRequest) {
 
     let sql = `SELECT id, title, slug, excerpt, category, tags, published, "createdAt", "coverImage" FROM "posts" WHERE 1=1`
     const params: any[] = []
-    let paramIndex = 1
+    let idx = 1
 
     if (category) {
-      sql += ` AND "category" = $${paramIndex++}`
+      sql += ` AND "category" = $${idx++}`
       params.push(category)
     }
     if (publishedOnly) {
       sql += ` AND "published" = true`
     }
-
     sql += ` ORDER BY "createdAt" DESC`
 
-    const posts = await prisma.$queryRawUnsafe(sql, ...params)
-    return NextResponse.json(posts)
+    const result = await pgPool.query(sql, params)
+    return NextResponse.json(result.rows)
   } catch {
     return NextResponse.json({ error: "获取失败" }, { status: 500 })
   }

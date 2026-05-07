@@ -1,19 +1,14 @@
 import { NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
+import { pgPool } from "@/lib/db"
 import bcrypt from "bcryptjs"
 import { randomUUID } from "crypto"
-
-async function runSql(sql: string) {
-  await prisma.$executeRawUnsafe(sql)
-}
 
 export async function GET() {
   const results: string[] = []
 
   try {
-    // 创建 users 表
-    try {
-      await runSql(`
+    const tables = [
+      { name: "users", sql: `
         CREATE TABLE IF NOT EXISTS "users" (
           "id" TEXT NOT NULL PRIMARY KEY,
           "email" TEXT NOT NULL,
@@ -25,19 +20,8 @@ export async function GET() {
           "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
           "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
         )
-      `)
-      results.push("✅ users 表创建成功")
-    } catch (e: any) {
-      results.push("⚠️ users 表: " + e.message.substring(0, 100))
-    }
-
-    try {
-      await runSql(`CREATE UNIQUE INDEX IF NOT EXISTS "users_email_key" ON "users"("email")`)
-    } catch (e: any) { /* ignore */ }
-
-    // 创建 accounts 表
-    try {
-      await runSql(`
+      ` },
+      { name: "accounts", sql: `
         CREATE TABLE IF NOT EXISTS "accounts" (
           "id" TEXT NOT NULL PRIMARY KEY,
           "userId" TEXT NOT NULL,
@@ -53,19 +37,8 @@ export async function GET() {
           "session_state" TEXT,
           CONSTRAINT "accounts_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE
         )
-      `)
-      results.push("✅ accounts 表创建成功")
-    } catch (e: any) {
-      results.push("⚠️ accounts 表: " + e.message.substring(0, 100))
-    }
-
-    try {
-      await runSql(`CREATE UNIQUE INDEX IF NOT EXISTS "accounts_provider_providerAccountId_key" ON "accounts"("provider", "providerAccountId")`)
-    } catch (e: any) { /* ignore */ }
-
-    // 创建 sessions 表
-    try {
-      await runSql(`
+      ` },
+      { name: "sessions", sql: `
         CREATE TABLE IF NOT EXISTS "sessions" (
           "id" TEXT NOT NULL PRIMARY KEY,
           "sessionToken" TEXT NOT NULL,
@@ -73,19 +46,8 @@ export async function GET() {
           "expires" TIMESTAMP(3) NOT NULL,
           CONSTRAINT "sessions_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE
         )
-      `)
-      results.push("✅ sessions 表创建成功")
-    } catch (e: any) {
-      results.push("⚠️ sessions 表: " + e.message.substring(0, 100))
-    }
-
-    try {
-      await runSql(`CREATE UNIQUE INDEX IF NOT EXISTS "sessions_sessionToken_key" ON "sessions"("sessionToken")`)
-    } catch (e: any) { /* ignore */ }
-
-    // 创建 posts 表
-    try {
-      await runSql(`
+      ` },
+      { name: "posts", sql: `
         CREATE TABLE IF NOT EXISTS "posts" (
           "id" TEXT NOT NULL PRIMARY KEY,
           "title" TEXT NOT NULL,
@@ -102,17 +64,32 @@ export async function GET() {
           "coverImage" TEXT,
           CONSTRAINT "posts_authorId_fkey" FOREIGN KEY ("authorId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE
         )
-      `)
-      results.push("✅ posts 表创建成功")
-    } catch (e: any) {
-      results.push("⚠️ posts 表: " + e.message.substring(0, 100))
+      ` },
+    ]
+
+    for (const table of tables) {
+      try {
+        await pgPool.query(table.sql)
+        results.push(`✅ ${table.name} 表创建成功`)
+      } catch (e: any) {
+        results.push(`⚠️ ${table.name} 表: ${e.message.substring(0, 80)}`)
+      }
     }
 
-    try { await runSql(`CREATE UNIQUE INDEX IF NOT EXISTS "posts_slug_key" ON "posts"("slug")`) } catch (e: any) { /* ignore */ }
-    try { await runSql(`CREATE INDEX IF NOT EXISTS "posts_published_idx" ON "posts"("published")`) } catch (e: any) { /* ignore */ }
-    try { await runSql(`CREATE INDEX IF NOT EXISTS "posts_category_idx" ON "posts"("category")`) } catch (e: any) { /* ignore */ }
+    // 创建索引
+    const indexes = [
+      `CREATE UNIQUE INDEX IF NOT EXISTS "users_email_key" ON "users"("email")`,
+      `CREATE UNIQUE INDEX IF NOT EXISTS "accounts_provider_providerAccountId_key" ON "accounts"("provider", "providerAccountId")`,
+      `CREATE UNIQUE INDEX IF NOT EXISTS "sessions_sessionToken_key" ON "sessions"("sessionToken")`,
+      `CREATE UNIQUE INDEX IF NOT EXISTS "posts_slug_key" ON "posts"("slug")`,
+      `CREATE INDEX IF NOT EXISTS "posts_published_idx" ON "posts"("published")`,
+      `CREATE INDEX IF NOT EXISTS "posts_category_idx" ON "posts"("category")`,
+    ]
+    for (const idx of indexes) {
+      try { await pgPool.query(idx) } catch { /* ignore */ }
+    }
 
-    // 用原始 SQL 创建管理员账户
+    // 创建管理员
     try {
       const adminEmail = process.env.ADMIN_EMAIL
       const adminPassword = process.env.ADMIN_PASSWORD
@@ -120,42 +97,25 @@ export async function GET() {
       if (!adminEmail || !adminPassword) {
         results.push("❌ 环境变量 ADMIN_EMAIL 或 ADMIN_PASSWORD 未设置")
       } else {
-        // 检查是否已存在
-        const existing: any[] = await prisma.$queryRawUnsafe(
-          `SELECT id FROM "users" WHERE "role" = 'ADMIN' LIMIT 1`
-        )
-
-        if (existing.length > 0) {
-          results.push(`ℹ️ 管理员已存在`)
+        const existing = await pgPool.query(`SELECT id FROM "users" WHERE "role" = 'ADMIN' LIMIT 1`)
+        if (existing.rows.length > 0) {
+          results.push("ℹ️ 管理员已存在")
         } else {
           const hashedPassword = await bcrypt.hash(adminPassword, 10)
           const id = randomUUID()
-
-          await prisma.$executeRawUnsafe(
+          await pgPool.query(
             `INSERT INTO "users" ("id", "email", "name", "password", "role") VALUES ($1, $2, $3, $4, $5)`,
-            id, adminEmail, "管理员", hashedPassword, "ADMIN"
+            [id, adminEmail, "管理员", hashedPassword, "ADMIN"]
           )
           results.push(`✅ 管理员账户创建成功: ${adminEmail}`)
         }
       }
     } catch (e: any) {
-      results.push("❌ 管理员创建失败: " + e.message.substring(0, 200))
+      results.push("❌ 管理员创建失败: " + e.message.substring(0, 100))
     }
 
-    return NextResponse.json({
-      success: true,
-      message: "数据库初始化完成",
-      steps: results,
-    })
+    return NextResponse.json({ success: true, message: "数据库初始化完成", steps: results })
   } catch (error: any) {
-    return NextResponse.json(
-      {
-        success: false,
-        message: "初始化失败",
-        error: error.message,
-        steps: results,
-      },
-      { status: 500 }
-    )
+    return NextResponse.json({ success: false, message: "初始化失败", error: error.message, steps: results }, { status: 500 })
   }
 }

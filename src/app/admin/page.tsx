@@ -1,6 +1,6 @@
 import { auth } from "@/lib/auth"
 import { redirect } from "next/navigation"
-import { prisma } from "@/lib/prisma"
+import { pgPool } from "@/lib/db"
 import Link from "next/link"
 import { DeletePostButton } from "./DeletePostButton"
 
@@ -13,14 +13,15 @@ export default async function AdminPage() {
 
   let posts: any[] = []
   try {
-    posts = await prisma.$queryRawUnsafe(`
+    const result = await pgPool.query(`
       SELECT p.*, u."name" as "authorName", u."email" as "authorEmail"
       FROM "posts" p
       LEFT JOIN "users" u ON p."authorId" = u."id"
       ORDER BY p."createdAt" DESC
     `)
+    posts = result.rows
   } catch (error: any) {
-    console.error("Failed to fetch posts:", error)
+    console.error("Failed to fetch posts:", error.message)
   }
 
   return (
