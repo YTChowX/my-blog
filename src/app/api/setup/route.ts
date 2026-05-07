@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import bcrypt from "bcryptjs"
+import { randomUUID } from "crypto"
 
 async function runSql(sql: string) {
   await prisma.$executeRawUnsafe(sql)
@@ -32,9 +33,7 @@ export async function GET() {
 
     try {
       await runSql(`CREATE UNIQUE INDEX IF NOT EXISTS "users_email_key" ON "users"("email")`)
-    } catch (e: any) {
-      // ignore
-    }
+    } catch (e: any) { /* ignore */ }
 
     // 创建 accounts 表
     try {
@@ -62,9 +61,7 @@ export async function GET() {
 
     try {
       await runSql(`CREATE UNIQUE INDEX IF NOT EXISTS "accounts_provider_providerAccountId_key" ON "accounts"("provider", "providerAccountId")`)
-    } catch (e: any) {
-      // ignore
-    }
+    } catch (e: any) { /* ignore */ }
 
     // 创建 sessions 表
     try {
@@ -84,9 +81,7 @@ export async function GET() {
 
     try {
       await runSql(`CREATE UNIQUE INDEX IF NOT EXISTS "sessions_sessionToken_key" ON "sessions"("sessionToken")`)
-    } catch (e: any) {
-      // ignore
-    }
+    } catch (e: any) { /* ignore */ }
 
     // 创建 posts 表
     try {
@@ -113,45 +108,38 @@ export async function GET() {
       results.push("⚠️ posts 表: " + e.message.substring(0, 100))
     }
 
-    try {
-      await runSql(`CREATE UNIQUE INDEX IF NOT EXISTS "posts_slug_key" ON "posts"("slug")`)
-    } catch (e: any) { /* ignore */ }
-    try {
-      await runSql(`CREATE INDEX IF NOT EXISTS "posts_published_idx" ON "posts"("published")`)
-    } catch (e: any) { /* ignore */ }
-    try {
-      await runSql(`CREATE INDEX IF NOT EXISTS "posts_category_idx" ON "posts"("category")`)
-    } catch (e: any) { /* ignore */ }
+    try { await runSql(`CREATE UNIQUE INDEX IF NOT EXISTS "posts_slug_key" ON "posts"("slug")`) } catch (e: any) { /* ignore */ }
+    try { await runSql(`CREATE INDEX IF NOT EXISTS "posts_published_idx" ON "posts"("published")`) } catch (e: any) { /* ignore */ }
+    try { await runSql(`CREATE INDEX IF NOT EXISTS "posts_category_idx" ON "posts"("category")`) } catch (e: any) { /* ignore */ }
 
-    // 创建管理员账户
+    // 用原始 SQL 创建管理员账户
     try {
-      const existingAdmin = await prisma.user.findFirst({
-        where: { role: "ADMIN" },
-      })
+      const adminEmail = process.env.ADMIN_EMAIL
+      const adminPassword = process.env.ADMIN_PASSWORD
 
-      if (existingAdmin) {
-        results.push(`ℹ️ 管理员已存在: ${existingAdmin.email}`)
+      if (!adminEmail || !adminPassword) {
+        results.push("❌ 环境变量 ADMIN_EMAIL 或 ADMIN_PASSWORD 未设置")
       } else {
-        const adminEmail = process.env.ADMIN_EMAIL
-        const adminPassword = process.env.ADMIN_PASSWORD
+        // 检查是否已存在
+        const existing: any[] = await prisma.$queryRawUnsafe(
+          `SELECT id FROM "users" WHERE "role" = 'ADMIN' LIMIT 1`
+        )
 
-        if (!adminEmail || !adminPassword) {
-          results.push("❌ 环境变量 ADMIN_EMAIL 或 ADMIN_PASSWORD 未设置")
+        if (existing.length > 0) {
+          results.push(`ℹ️ 管理员已存在`)
         } else {
           const hashedPassword = await bcrypt.hash(adminPassword, 10)
-          await prisma.user.create({
-            data: {
-              email: adminEmail,
-              name: "管理员",
-              password: hashedPassword,
-              role: "ADMIN",
-            },
-          })
+          const id = randomUUID()
+
+          await prisma.$executeRawUnsafe(
+            `INSERT INTO "users" ("id", "email", "name", "password", "role") VALUES ($1, $2, $3, $4, $5)`,
+            id, adminEmail, "管理员", hashedPassword, "ADMIN"
+          )
           results.push(`✅ 管理员账户创建成功: ${adminEmail}`)
         }
       }
     } catch (e: any) {
-      results.push("❌ 管理员创建失败: " + e.message.substring(0, 100))
+      results.push("❌ 管理员创建失败: " + e.message.substring(0, 200))
     }
 
     return NextResponse.json({
