@@ -23,7 +23,8 @@
     "react-dom": "19.2.4",
     "remark": "^15.0.1",
     "remark-html": "^16.0.1",
-    "zod": "^3.23.8"
+    "zod": "^3.23.8",
+    "@uiw/react-md-editor": "^4.0.4"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
