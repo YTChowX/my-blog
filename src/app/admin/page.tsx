@@ -1,5 +1,5 @@
-import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth"
+import { getServerSession } from "next-auth"
 import { redirect } from "next/navigation"
 import { prisma } from "@/lib/prisma"
 import Link from "next/link"
@@ -88,7 +88,7 @@ export default async function AdminPage() {
 
         {posts.length === 0 && (
           <div className="p-8 text-center text-zinc-500">
-            暂无文章，点击"新建文章"开始创作
+            暂无文章，点击&quot;新建文章&quot;开始创作
           </div>
         )}
       </div>
