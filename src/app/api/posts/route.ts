@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { authOptions } from "@/lib/auth"
-import { getServerSession } from "next-auth"
+import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { z } from "zod"
 
@@ -17,7 +16,7 @@ const postSchema = z.object({
 // 创建文章
 export async function POST(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
+    const session = await auth()
 
     if (!session || session.user.role !== "ADMIN") {
       return NextResponse.json({ error: "未授权" }, { status: 401 })
@@ -26,7 +25,6 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
     const data = postSchema.parse(body)
 
-    // 检查 slug 是否已存在
     const existing = await prisma.post.findUnique({
       where: { slug: data.slug },
     })
@@ -54,7 +52,7 @@ export async function POST(req: NextRequest) {
   }
 }
 
-// 获取文章列表（公开 API）
+// 获取文章列表
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url)

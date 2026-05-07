@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { authOptions } from "@/lib/auth"
-import { getServerSession } from "next-auth"
+import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { z } from "zod"
 
@@ -46,7 +45,7 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await getServerSession(authOptions)
+    const session = await auth()
 
     if (!session || session.user.role !== "ADMIN") {
       return NextResponse.json({ error: "未授权" }, { status: 401 })
@@ -56,7 +55,6 @@ export async function PUT(
     const body = await req.json()
     const data = postSchema.parse(body)
 
-    // 检查 slug 是否被其他文章使用
     const existing = await prisma.post.findFirst({
       where: {
         slug: data.slug,
@@ -91,7 +89,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await getServerSession(authOptions)
+    const session = await auth()
 
     if (!session || session.user.role !== "ADMIN") {
       return NextResponse.json({ error: "未授权" }, { status: 401 })

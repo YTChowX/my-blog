@@ -1,4 +1,4 @@
-import { NextAuthOptions } from "next-auth"
+import NextAuth from "next-auth"
 import { PrismaAdapter } from "@auth/prisma-adapter"
 import CredentialsProvider from "next-auth/providers/credentials"
 import bcrypt from "bcryptjs"
@@ -10,11 +10,11 @@ const credentialsSchema = z.object({
   password: z.string().min(6),
 })
 
-export const authOptions: NextAuthOptions = {
+export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma) as any,
   session: {
     strategy: "jwt",
-    maxAge: 30 * 24 * 60 * 60, // 30 days
+    maxAge: 30 * 24 * 60 * 60,
   },
   pages: {
     signIn: "/auth/signin",
@@ -74,7 +74,7 @@ export const authOptions: NextAuthOptions = {
       return session
     },
   },
-}
+})
 
 // 声明扩展类型
 declare module "next-auth" {
