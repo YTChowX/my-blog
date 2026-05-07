@@ -14,7 +14,8 @@
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.2",
-    "@prisma/client": "^6.0.0",
+    "@prisma/client": "^6.19.3",
+    "@uiw/react-md-editor": "^4.0.4",
     "bcryptjs": "^2.4.3",
     "gray-matter": "^4.0.3",
     "next": "16.2.5",
@@ -23,8 +24,7 @@
     "react-dom": "19.2.4",
     "remark": "^15.0.1",
     "remark-html": "^16.0.1",
-    "zod": "^3.23.8",
-    "@uiw/react-md-editor": "^4.0.4"
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

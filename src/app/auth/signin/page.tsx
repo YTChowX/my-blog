@@ -1,11 +1,11 @@
 "use client"
 
 import { signIn } from "next-auth/react"
-import { useState } from "react"
+import { useState, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 
-export default function SignInPage() {
+function SignInForm() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
@@ -41,6 +41,48 @@ export default function SignInPage() {
   }
 
   return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      {error && (
+        <div className="p-3 rounded-lg bg-red-50 text-red-600 text-sm">
+          {error}
+        </div>
+      )}
+
+      <div>
+        <label className="block text-sm font-medium mb-1">邮箱</label>
+        <input
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-zinc-800 dark:border-zinc-700"
+          required
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium mb-1">密码</label>
+        <input
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-zinc-800 dark:border-zinc-700"
+          required
+        />
+      </div>
+
+      <button
+        type="submit"
+        disabled={loading}
+        className="w-full py-2 bg-zinc-900 text-white rounded-lg hover:bg-zinc-700 disabled:opacity-50 transition-colors"
+      >
+        {loading ? "登录中..." : "登录"}
+      </button>
+    </form>
+  )
+}
+
+export default function SignInPage() {
+  return (
     <div className="min-h-screen flex items-center justify-center px-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
@@ -48,43 +90,9 @@ export default function SignInPage() {
           <p className="text-zinc-500 mt-2">登录后管理博客内容</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {error && (
-            <div className="p-3 rounded-lg bg-red-50 text-red-600 text-sm">
-              {error}
-            </div>
-          )}
-
-          <div>
-            <label className="block text-sm font-medium mb-1">邮箱</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-zinc-800 dark:border-zinc-700"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-1">密码</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-zinc-800 dark:border-zinc-700"
-              required
-            />
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-2 bg-zinc-900 text-white rounded-lg hover:bg-zinc-700 disabled:opacity-50 transition-colors"
-          >
-            {loading ? "登录中..." : "登录"}
-          </button>
-        </form>
+        <Suspense fallback={<div className="text-center py-8">加载中...</div>}>
+          <SignInForm />
+        </Suspense>
 
         <div className="mt-6 text-center">
           <Link href="/" className="text-sm text-zinc-500 hover:text-zinc-900">

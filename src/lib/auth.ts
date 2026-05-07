@@ -76,7 +76,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   },
 })
 
-// 声明扩展类型
+// NextAuth v5 类型扩展：全部在 "next-auth" 模块下声明
 declare module "next-auth" {
   interface Session {
     user: {
@@ -91,9 +91,7 @@ declare module "next-auth" {
   interface User {
     role: "USER" | "ADMIN"
   }
-}
 
-declare module "next-auth/jwt" {
   interface JWT {
     role: "USER" | "ADMIN"
     id: string
