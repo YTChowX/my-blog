@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { z } from "zod"
+import { randomUUID } from "crypto"
 
 const postSchema = z.object({
   title: z.string().min(1, "标题不能为空"),
@@ -25,28 +26,30 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
     const data = postSchema.parse(body)
 
-    const existing = await prisma.post.findUnique({
-      where: { slug: data.slug },
-    })
+    // 检查 slug 是否已存在
+    const existing: any[] = await prisma.$queryRawUnsafe(
+      `SELECT id FROM "posts" WHERE "slug" = $1 LIMIT 1`,
+      data.slug
+    )
 
-    if (existing) {
+    if (existing.length > 0) {
       return NextResponse.json({ error: "Slug 已存在" }, { status: 400 })
     }
 
-    const post = await prisma.post.create({
-      data: {
-        ...data,
-        authorId: session.user.id,
-      },
-    })
+    const id = randomUUID()
+    const tagsJson = JSON.stringify(data.tags)
 
-    return NextResponse.json(post, { status: 201 })
+    await prisma.$executeRawUnsafe(
+      `INSERT INTO "posts" ("id", "title", "slug", "content", "excerpt", "published", "category", "tags", "authorId")
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8::jsonb, $9)`,
+      id, data.title, data.slug, data.content, data.excerpt || null,
+      data.published, data.category, tagsJson, session.user.id
+    )
+
+    return NextResponse.json({ id, success: true }, { status: 201 })
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: error.errors[0].message },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: error.errors[0].message }, { status: 400 })
     }
     return NextResponse.json({ error: "创建失败" }, { status: 500 })
   }
@@ -57,28 +60,23 @@ export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url)
     const category = searchParams.get("category")
-    const published = searchParams.get("published")
+    const publishedOnly = searchParams.get("published") === "true"
 
-    const where: any = {}
-    if (category) where.category = category
-    if (published !== null) where.published = published === "true"
+    let sql = `SELECT id, title, slug, excerpt, category, tags, published, "createdAt", "coverImage" FROM "posts" WHERE 1=1`
+    const params: any[] = []
+    let paramIndex = 1
 
-    const posts = await prisma.post.findMany({
-      where,
-      orderBy: { createdAt: "desc" },
-      select: {
-        id: true,
-        title: true,
-        slug: true,
-        excerpt: true,
-        category: true,
-        tags: true,
-        published: true,
-        createdAt: true,
-        coverImage: true,
-      },
-    })
+    if (category) {
+      sql += ` AND "category" = $${paramIndex++}`
+      params.push(category)
+    }
+    if (publishedOnly) {
+      sql += ` AND "published" = true`
+    }
 
+    sql += ` ORDER BY "createdAt" DESC`
+
+    const posts = await prisma.$queryRawUnsafe(sql, ...params)
     return NextResponse.json(posts)
   } catch {
     return NextResponse.json({ error: "获取失败" }, { status: 500 })

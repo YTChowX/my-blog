@@ -20,20 +20,16 @@ export async function GET(
 ) {
   try {
     const { id } = await params
-    const post = await prisma.post.findUnique({
-      where: { id },
-      include: {
-        author: {
-          select: { name: true },
-        },
-      },
-    })
+    const posts: any[] = await prisma.$queryRawUnsafe(
+      `SELECT p.*, u."name" as "authorName" FROM "posts" p LEFT JOIN "users" u ON p."authorId" = u."id" WHERE p."id" = $1`,
+      id
+    )
 
-    if (!post) {
+    if (posts.length === 0) {
       return NextResponse.json({ error: "文章不存在" }, { status: 404 })
     }
 
-    return NextResponse.json(post)
+    return NextResponse.json(posts[0])
   } catch {
     return NextResponse.json({ error: "获取失败" }, { status: 500 })
   }
@@ -55,29 +51,28 @@ export async function PUT(
     const body = await req.json()
     const data = postSchema.parse(body)
 
-    const existing = await prisma.post.findFirst({
-      where: {
-        slug: data.slug,
-        NOT: { id },
-      },
-    })
+    // 检查 slug 是否被其他文章使用
+    const existing: any[] = await prisma.$queryRawUnsafe(
+      `SELECT id FROM "posts" WHERE "slug" = $1 AND "id" != $2 LIMIT 1`,
+      data.slug, id
+    )
 
-    if (existing) {
+    if (existing.length > 0) {
       return NextResponse.json({ error: "Slug 已被使用" }, { status: 400 })
     }
 
-    const post = await prisma.post.update({
-      where: { id },
-      data,
-    })
+    const tagsJson = JSON.stringify(data.tags)
 
-    return NextResponse.json(post)
+    await prisma.$executeRawUnsafe(
+      `UPDATE "posts" SET "title" = $1, "slug" = $2, "content" = $3, "excerpt" = $4, "published" = $5, "category" = $6, "tags" = $7::jsonb, "updatedAt" = NOW() WHERE "id" = $8`,
+      data.title, data.slug, data.content, data.excerpt || null,
+      data.published, data.category, tagsJson, id
+    )
+
+    return NextResponse.json({ success: true })
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: error.errors[0].message },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: error.errors[0].message }, { status: 400 })
     }
     return NextResponse.json({ error: "更新失败" }, { status: 500 })
   }
@@ -96,9 +91,7 @@ export async function DELETE(
     }
 
     const { id } = await params
-    await prisma.post.delete({
-      where: { id },
-    })
+    await prisma.$executeRawUnsafe(`DELETE FROM "posts" WHERE "id" = $1`, id)
 
     return NextResponse.json({ success: true })
   } catch {

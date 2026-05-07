@@ -11,14 +11,17 @@ export default async function AdminPage() {
     redirect("/auth/signin?callbackUrl=/admin")
   }
 
-  const posts = await prisma.post.findMany({
-    orderBy: { createdAt: "desc" },
-    include: {
-      author: {
-        select: { name: true, email: true },
-      },
-    },
-  })
+  let posts: any[] = []
+  try {
+    posts = await prisma.$queryRawUnsafe(`
+      SELECT p.*, u."name" as "authorName", u."email" as "authorEmail"
+      FROM "posts" p
+      LEFT JOIN "users" u ON p."authorId" = u."id"
+      ORDER BY p."createdAt" DESC
+    `)
+  } catch (error: any) {
+    console.error("Failed to fetch posts:", error)
+  }
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
@@ -47,7 +50,7 @@ export default async function AdminPage() {
             </tr>
           </thead>
           <tbody className="divide-y">
-            {posts.map((post) => (
+            {posts.map((post: any) => (
               <tr key={post.id} className="hover:bg-zinc-50 dark:hover:bg-zinc-800">
                 <td className="px-4 py-3">
                   <div className="font-medium">{post.title}</div>
