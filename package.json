@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@uiw/react-md-editor": "^4.0.4",
+    "@vercel/blob": "^2.3.3",
     "bcryptjs": "^2.4.3",
     "gray-matter": "^4.0.3",
     "next": "16.2.5",
