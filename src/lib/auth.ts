@@ -1,5 +1,4 @@
 import NextAuth from "next-auth"
-import { PrismaAdapter } from "@auth/prisma-adapter"
 import CredentialsProvider from "next-auth/providers/credentials"
 import bcrypt from "bcryptjs"
 import { prisma } from "./prisma"
@@ -11,7 +10,7 @@ const credentialsSchema = z.object({
 })
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  adapter: PrismaAdapter(prisma) as any,
+  // 不使用 adapter — JWT 策略不需要数据库存储 session
   session: {
     strategy: "jwt",
     maxAge: 30 * 24 * 60 * 60,
@@ -31,9 +30,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         try {
           const { email, password } = credentialsSchema.parse(credentials)
 
-          const user = await prisma.user.findUnique({
-            where: { email },
-          })
+          // 使用原始 SQL 查询用户（避免 Prisma ORM 在 Neon 上的问题）
+          const users: any[] = await prisma.$queryRawUnsafe(
+            `SELECT * FROM "users" WHERE "email" = $1 LIMIT 1`,
+            email
+          )
+
+          const user = users[0]
 
           if (!user || !user.password) {
             return null
@@ -76,7 +79,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   },
 })
 
-// NextAuth v5 类型扩展：全部在 "next-auth" 模块下声明
+// NextAuth v5 类型扩展
 declare module "next-auth" {
   interface Session {
     user: {
