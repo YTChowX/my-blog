@@ -15,6 +15,7 @@ export default async function AdminPage() {
   let postsCount = 0
   let albumsCount = 0
   let productsCount = 0
+  let snippetsCount = 0
 
   try {
     const postsResult = await pgPool.query(`SELECT COUNT(*) FROM "posts"`)
@@ -25,6 +26,9 @@ export default async function AdminPage() {
 
     const productsResult = await pgPool.query(`SELECT COUNT(*) FROM "products"`)
     productsCount = parseInt(productsResult.rows[0].count) || 0
+
+    const snippetsResult = await pgPool.query(`SELECT COUNT(*) FROM "code_snippets"`)
+    snippetsCount = parseInt(snippetsResult.rows[0].count) || 0
   } catch (e) {
     console.error(e)
   }
@@ -53,6 +57,13 @@ export default async function AdminPage() {
       color: "bg-blue-50 text-blue-700",
     },
     {
+      title: "💻 代码片段",
+      description: "管理和分享代码",
+      href: "/admin/snippets",
+      count: snippetsCount,
+      color: "bg-orange-50 text-orange-700",
+    },
+    {
       title: "📷 相册管理",
       description: "上传和管理照片",
       href: "/admin/albums",
@@ -76,7 +87,7 @@ export default async function AdminPage() {
       </div>
 
       {/* 管理入口卡片 */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         {managementCards.map((card) => (
           <Link
             key={card.href}
