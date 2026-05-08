@@ -5,7 +5,7 @@ export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url)
     const q = searchParams.get("q")?.trim()
-    const type = searchParams.get("type") || "all" // all, post, snippet
+    const type = searchParams.get("type") || "all"
 
     if (!q || q.length < 1) {
       return NextResponse.json({ results: [], total: 0 })
@@ -27,7 +27,9 @@ export async function GET(req: NextRequest) {
           [keyword]
         )
         results.push(...postResult.rows)
-      } catch { /* ignore */ }
+      } catch (e: any) {
+        console.error("[Search] 文章搜索失败:", e.message)
+      }
     }
 
     // 搜索代码片段
@@ -43,11 +45,14 @@ export async function GET(req: NextRequest) {
           [keyword]
         )
         results.push(...snippetResult.rows)
-      } catch { /* ignore */ }
+      } catch (e: any) {
+        console.error("[Search] 代码片段搜索失败:", e.message)
+      }
     }
 
     return NextResponse.json({ results, total: results.length, query: q })
-  } catch {
-    return NextResponse.json({ results: [], total: 0 }, { status: 500 })
+  } catch (e: any) {
+    console.error("[Search] 搜索接口错误:", e.message)
+    return NextResponse.json({ error: "搜索失败", results: [], total: 0 }, { status: 500 })
   }
 }

@@ -30,6 +30,7 @@ const supportedLanguages = [
 export default function SnippetsPage() {
   const [snippets, setSnippets] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState("")
   const router = useRouter()
 
   useEffect(() => {
@@ -37,14 +38,19 @@ export default function SnippetsPage() {
   }, [])
 
   const fetchSnippets = async () => {
+    setLoading(true)
+    setError("")
     try {
       const res = await fetch("/api/snippets")
       if (res.ok) {
         const data = await res.json()
         setSnippets(data)
+      } else {
+        const err = await res.json()
+        setError(err.error || "加载代码片段失败")
       }
-    } catch (e) {
-      console.error(e)
+    } catch (e: any) {
+      setError("加载失败: " + e.message)
     } finally {
       setLoading(false)
     }
@@ -57,9 +63,12 @@ export default function SnippetsPage() {
       const res = await fetch(`/api/snippets/${id}`, { method: "DELETE" })
       if (res.ok) {
         setSnippets(snippets.filter((s) => s.id !== id))
+      } else {
+        const err = await res.json()
+        alert("删除失败: " + (err.error || "未知错误"))
       }
-    } catch (e) {
-      console.error(e)
+    } catch (e: any) {
+      alert("删除失败: " + e.message)
     }
   }
 
@@ -98,7 +107,14 @@ export default function SnippetsPage() {
         </div>
       </div>
 
-      {snippets.length === 0 ? (
+      {error && (
+        <div className="p-4 mb-6 rounded-lg bg-red-50 text-red-600">
+          {error}
+          <button onClick={fetchSnippets} className="ml-2 underline">重试</button>
+        </div>
+      )}
+
+      {snippets.length === 0 && !error ? (
         <div className="text-center py-16 border rounded-xl">
           <div className="text-6xl mb-4">💻</div>
           <h3 className="text-xl font-medium mb-2">暂无代码片段</h3>

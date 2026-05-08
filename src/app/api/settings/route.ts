@@ -18,7 +18,7 @@ async function ensureTable() {
 export async function GET() {
   try {
     const session = await auth()
-    if (!session || session.user.role !== "ADMIN") {
+    if (!session?.user?.role || session.user.role !== "ADMIN") {
       return NextResponse.json({ error: "未授权" }, { status: 401 })
     }
 
@@ -29,15 +29,16 @@ export async function GET() {
       settings[row.key] = row.value
     })
     return NextResponse.json(settings)
-  } catch {
-    return NextResponse.json({ error: "获取设置失败" }, { status: 500 })
+  } catch (e: any) {
+    console.error("[Settings] GET 错误:", e.message)
+    return NextResponse.json({ error: "获取设置失败: " + e.message }, { status: 500 })
   }
 }
 
 export async function PUT(req: NextRequest) {
   try {
     const session = await auth()
-    if (!session || session.user.role !== "ADMIN") {
+    if (!session?.user?.role || session.user.role !== "ADMIN") {
       return NextResponse.json({ error: "未授权" }, { status: 401 })
     }
 
@@ -55,7 +56,8 @@ export async function PUT(req: NextRequest) {
     }
 
     return NextResponse.json({ success: true })
-  } catch {
-    return NextResponse.json({ error: "保存设置失败" }, { status: 500 })
+  } catch (e: any) {
+    console.error("[Settings] PUT 错误:", e.message)
+    return NextResponse.json({ error: "保存设置失败: " + e.message }, { status: 500 })
   }
 }

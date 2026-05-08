@@ -2,7 +2,6 @@ import { auth } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import { pgPool } from "@/lib/db"
 import Link from "next/link"
-import { DeleteAlbumButton } from "./DeleteAlbumButton"
 
 export default async function AdminAlbumsPage() {
   const session = await auth()
@@ -11,8 +10,16 @@ export default async function AdminAlbumsPage() {
     redirect("/auth/signin?callbackUrl=/admin/albums")
   }
 
-  const result = await pgPool.query(`SELECT * FROM "albums" ORDER BY "created_at" DESC`)
-  const albums = result.rows
+  let albums: any[] = []
+  let error = ""
+
+  try {
+    const result = await pgPool.query(`SELECT * FROM "albums" ORDER BY "created_at" DESC`)
+    albums = result.rows
+  } catch (e: any) {
+    console.error("[AdminAlbums] 加载相册失败:", e.message)
+    error = "加载相册失败: " + e.message
+  }
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
@@ -29,7 +36,14 @@ export default async function AdminAlbumsPage() {
         </Link>
       </div>
 
-      {albums.length === 0 ? (
+      {error && (
+        <div className="p-4 mb-6 rounded-lg bg-red-50 text-red-600">
+          {error}
+          <p className="text-sm mt-1">请检查数据库连接或稍后重试</p>
+        </div>
+      )}
+
+      {albums.length === 0 && !error ? (
         <div className="text-center py-16 border-2 border-dashed rounded-xl">
           <div className="text-6xl mb-4">📷</div>
           <h3 className="text-xl font-medium mb-2">还没有相册</h3>

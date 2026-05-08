@@ -23,25 +23,34 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState("")
+  const [error, setError] = useState("")
 
   useEffect(() => {
     fetchSettings()
   }, [])
 
   const fetchSettings = async () => {
+    setLoading(true)
+    setError("")
     try {
       const res = await fetch("/api/settings")
       if (res.ok) {
         const data = await res.json()
         setSettings({ ...defaultSettings, ...data })
+      } else {
+        const err = await res.json()
+        setError(err.error || "加载设置失败")
       }
-    } catch { /* ignore */ }
+    } catch (e: any) {
+      setError("加载设置失败: " + e.message)
+    }
     setLoading(false)
   }
 
   const handleSave = async () => {
     setSaving(true)
     setMessage("")
+    setError("")
     try {
       const res = await fetch("/api/settings", {
         method: "PUT",
@@ -52,10 +61,11 @@ export default function SettingsPage() {
         setMessage("✅ 设置已保存")
         setTimeout(() => setMessage(""), 3000)
       } else {
-        setMessage("❌ 保存失败")
+        const err = await res.json()
+        setError(err.error || "保存失败")
       }
-    } catch {
-      setMessage("❌ 保存失败")
+    } catch (e: any) {
+      setError("保存失败: " + e.message)
     }
     setSaving(false)
   }
@@ -74,6 +84,13 @@ export default function SettingsPage() {
 
       {message && (
         <div className="p-3 rounded-lg bg-green-50 text-green-700 text-sm mb-6">{message}</div>
+      )}
+      
+      {error && (
+        <div className="p-3 rounded-lg bg-red-50 text-red-600 text-sm mb-6">
+          {error}
+          <button onClick={fetchSettings} className="ml-2 underline">重试</button>
+        </div>
       )}
 
       <div className="space-y-8">
