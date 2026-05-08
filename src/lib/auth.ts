@@ -16,13 +16,15 @@ const credentialsSchema = z.object({
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   secret: process.env.NEXTAUTH_SECRET,
-  trustHost: false,
+  // 生产环境需要 trustHost，开发环境不需要
+  trustHost: process.env.NODE_ENV === "production",
   session: {
     strategy: "jwt",
     maxAge: 7 * 24 * 60 * 60, // 7 天过期
   },
   pages: {
     signIn: "/auth/signin",
+    error: "/auth/error",
   },
   providers: [
     CredentialsProvider({
@@ -60,7 +62,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             role: user.role,
           }
         } catch (err) {
-          console.error("Authorize error")
+          console.error("Authorize error:", err)
           return null
         }
       },
@@ -82,6 +84,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       return session
     },
   },
+  debug: process.env.NODE_ENV !== "production",
 })
 
 declare module "next-auth" {
