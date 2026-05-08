@@ -1,42 +1,73 @@
-import Link from "next/link";
-import { getPostsByCategory } from "@/lib/posts";
+import { pgPool } from "@/lib/db"
+import Link from "next/link"
 
-export const metadata = {
-  title: "摄影 | 我的生活笔记",
-  description: "摄影作品、拍摄技巧、后期修图心得",
-};
-
-export default function PhotographyPage() {
-  const posts = getPostsByCategory("摄影");
+export default async function PhotographyPage() {
+  let albums: any[] = []
+  try {
+    const result = await pgPool.query(
+      `SELECT * FROM "albums" WHERE "is_public" = true ORDER BY "created_at" DESC`
+    )
+    albums = result.rows
+  } catch (e) {
+    console.error(e)
+  }
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-12">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">📷 摄影</h1>
-        <p className="text-zinc-500 dark:text-zinc-400">用镜头记录世界，分享摄影技巧和作品。</p>
+    <div className="max-w-6xl mx-auto px-4 py-12">
+      <div className="text-center mb-12">
+        <h1 className="text-4xl font-bold mb-4">📷 摄影</h1>
+        <p className="text-zinc-500 text-lg">用镜头记录生活的美好瞬间</p>
       </div>
 
-      {posts.length === 0 ? (
-        <p className="text-zinc-500 dark:text-zinc-400">暂无摄影类文章。</p>
+      {albums.length === 0 ? (
+        <div className="text-center py-16">
+          <div className="text-6xl mb-4">📷</div>
+          <h3 className="text-xl font-medium mb-2">暂无相册</h3>
+          <p className="text-zinc-500">相册正在整理中，敬请期待...</p>
+        </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {posts.map((post) => (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {albums.map((album: any) => (
             <Link
-              key={post.slug}
-              href={`/blog/${post.slug}`}
-              className="group block p-6 rounded-xl border border-zinc-200 dark:border-zinc-800 hover:border-purple-400 dark:hover:border-purple-600 hover:shadow-lg transition-all"
+              key={album.id}
+              href={`/photography/${album.slug}`}
+              className="group block bg-white dark:bg-zinc-900 rounded-xl overflow-hidden border hover:shadow-xl transition-all duration-300"
             >
-              <div className="flex items-center gap-2 mb-3">
-                <span className="text-xs text-zinc-400">{post.date}</span>
+              <div className="aspect-[4/3] bg-zinc-100 dark:bg-zinc-800 relative overflow-hidden">
+                {album.cover_image ? (
+                  <img
+                    src={album.cover_image}
+                    alt={album.title}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-6xl">
+                    🖼️
+                  </div>
+                )}
+                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-4">
+                  <span className="text-white text-sm">
+                    {album.photo_count} 张照片
+                  </span>
+                </div>
               </div>
-              <h2 className="text-xl font-semibold mb-2 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
-                {post.title}
-              </h2>
-              <p className="text-sm text-zinc-500 dark:text-zinc-400">{post.excerpt}</p>
+              <div className="p-4">
+                <h2 className="font-medium text-lg group-hover:text-blue-600 transition-colors">
+                  {album.title}
+                </h2>
+                {album.description && (
+                  <p className="text-sm text-zinc-500 mt-1 line-clamp-2">
+                    {album.description}
+                  </p>
+                )}
+                <p className="text-xs text-zinc-400 mt-2">
+                  {new Date(album.created_at).toLocaleDateString("zh-CN")}
+                </p>
+              </div>
             </Link>
           ))}
         </div>
       )}
     </div>
-  );
+  )
 }

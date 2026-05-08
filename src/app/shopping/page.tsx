@@ -1,42 +1,116 @@
-import Link from "next/link";
-import { getPostsByCategory } from "@/lib/posts";
+import { pgPool } from "@/lib/db"
+import Link from "next/link"
 
-export const metadata = {
-  title: "购物 | 我的生活笔记",
-  description: "好物推荐、购物心得、数码产品评测",
-};
+export default async function ShoppingPage() {
+  let products: any[] = []
+  let categories: any[] = []
 
-export default function ShoppingPage() {
-  const posts = getPostsByCategory("购物");
+  try {
+    const [productsResult, categoriesResult] = await Promise.all([
+      pgPool.query(`
+        SELECT p.*, c."name" as "categoryName"
+        FROM "products" p
+        LEFT JOIN "product_categories" c ON p."category_id" = c."id"
+        WHERE p."status" = 'active'
+        ORDER BY p."is_featured" DESC, p."created_at" DESC
+      `),
+      pgPool.query(`SELECT * FROM "product_categories" ORDER BY "sort_order"`),
+    ])
+    products = productsResult.rows
+    categories = categoriesResult.rows
+  } catch (e) {
+    console.error(e)
+  }
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-12">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">🛒 购物</h1>
-        <p className="text-zinc-500 dark:text-zinc-400">分享购物心得和好物推荐，帮你做出更好的消费选择。</p>
+    <div className="max-w-6xl mx-auto px-4 py-12">
+      <div className="text-center mb-12">
+        <h1 className="text-4xl font-bold mb-4">🛒 购物</h1>
+        <p className="text-zinc-500 text-lg">精选好物，品质生活</p>
       </div>
 
-      {posts.length === 0 ? (
-        <p className="text-zinc-500 dark:text-zinc-400">暂无购物类文章。</p>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {posts.map((post) => (
+      {/* 分类筛选 */}
+      {categories.length > 0 && (
+        <div className="flex flex-wrap justify-center gap-2 mb-8">
+          <Link
+            href="/shopping"
+            className="px-4 py-2 rounded-full bg-zinc-900 text-white text-sm"
+          >
+            全部
+          </Link>
+          {categories.map((cat: any) => (
             <Link
-              key={post.slug}
-              href={`/blog/${post.slug}`}
-              className="group block p-6 rounded-xl border border-zinc-200 dark:border-zinc-800 hover:border-orange-400 dark:hover:border-orange-600 hover:shadow-lg transition-all"
+              key={cat.id}
+              href={`/shopping?category=${cat.slug}`}
+              className="px-4 py-2 rounded-full border text-sm hover:bg-zinc-100 dark:hover:bg-zinc-800"
             >
-              <div className="flex items-center gap-2 mb-3">
-                <span className="text-xs text-zinc-400">{post.date}</span>
+              {cat.icon} {cat.name}
+            </Link>
+          ))}
+        </div>
+      )}
+
+      {products.length === 0 ? (
+        <div className="text-center py-16">
+          <div className="text-6xl mb-4">🛒</div>
+          <h3 className="text-xl font-medium mb-2">暂无商品</h3>
+          <p className="text-zinc-500">商品正在上架中，敬请期待...</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          {products.map((product: any) => (
+            <Link
+              key={product.id}
+              href={`/shopping/${product.slug}`}
+              className="group bg-white dark:bg-zinc-900 rounded-xl overflow-hidden border hover:shadow-lg transition-shadow"
+            >
+              <div className="aspect-square bg-zinc-100 dark:bg-zinc-800 relative overflow-hidden">
+                {product.images && product.images[0] ? (
+                  <img
+                    src={product.images[0]}
+                    alt={product.name}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-4xl">
+                    📦
+                  </div>
+                )}
+                
+                {/* 标签 */}
+                <div className="absolute top-2 left-2 flex flex-col gap-1">
+                  {product.is_featured && (
+                    <span className="px-2 py-1 bg-yellow-500 text-white text-xs rounded">
+                      推荐
+                    </span>
+                  )}
+                  {product.original_price && Number(product.original_price) > Number(product.price) && (
+                    <span className="px-2 py-1 bg-red-500 text-white text-xs rounded">
+                      {Math.round((1 - Number(product.price) / Number(product.original_price)) * 100)}% OFF
+                    </span>
+                  )}
+                </div>
               </div>
-              <h2 className="text-xl font-semibold mb-2 group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors">
-                {post.title}
-              </h2>
-              <p className="text-sm text-zinc-500 dark:text-zinc-400">{post.excerpt}</p>
+              
+              <div className="p-3">
+                <h3 className="font-medium text-sm line-clamp-2 group-hover:text-blue-600">
+                  {product.name}
+                </h3>
+                <div className="flex items-baseline gap-1 mt-2">
+                  <span className="text-lg font-bold text-red-600">
+                    ¥{product.price}
+                  </span>
+                  {product.original_price && Number(product.original_price) > Number(product.price) && (
+                    <span className="text-xs text-zinc-400 line-through">
+                      ¥{product.original_price}
+                    </span>
+                  )}
+                </div>
+              </div>
             </Link>
           ))}
         </div>
       )}
     </div>
-  );
+  )
 }
