@@ -1,11 +1,21 @@
 import { NextResponse } from "next/server"
+import { auth } from "@/lib/auth"
 import { pgPool } from "@/lib/db"
 
 export async function GET() {
+  // 安全检查：仅允许已认证的管理员调用
+  try {
+    const session = await auth()
+    if (!session || session.user.role !== "ADMIN") {
+      return NextResponse.json({ error: "未授权" }, { status: 401 })
+    }
+  } catch {
+    return NextResponse.json({ error: "认证服务不可用" }, { status: 500 })
+  }
+
   const results: string[] = []
 
   try {
-    // 创建相册表
     try {
       await pgPool.query(`
         CREATE TABLE IF NOT EXISTS "albums" (
@@ -21,11 +31,10 @@ export async function GET() {
         )
       `)
       results.push("✅ albums 表创建成功")
-    } catch (e: any) {
-      results.push("⚠️ albums: " + e.message.substring(0, 80))
+    } catch {
+      results.push("⚠️ albums 表创建失败")
     }
 
-    // 创建照片表
     try {
       await pgPool.query(`
         CREATE TABLE IF NOT EXISTS "photos" (
@@ -46,11 +55,10 @@ export async function GET() {
         )
       `)
       results.push("✅ photos 表创建成功")
-    } catch (e: any) {
-      results.push("⚠️ photos: " + e.message.substring(0, 80))
+    } catch {
+      results.push("⚠️ photos 表创建失败")
     }
 
-    // 创建商品分类表
     try {
       await pgPool.query(`
         CREATE TABLE IF NOT EXISTS "product_categories" (
@@ -63,11 +71,10 @@ export async function GET() {
         )
       `)
       results.push("✅ product_categories 表创建成功")
-    } catch (e: any) {
-      results.push("⚠️ product_categories: " + e.message.substring(0, 80))
+    } catch {
+      results.push("⚠️ product_categories 表创建失败")
     }
 
-    // 创建商品表
     try {
       await pgPool.query(`
         CREATE TABLE IF NOT EXISTS "products" (
@@ -89,11 +96,10 @@ export async function GET() {
         )
       `)
       results.push("✅ products 表创建成功")
-    } catch (e: any) {
-      results.push("⚠️ products: " + e.message.substring(0, 80))
+    } catch {
+      results.push("⚠️ products 表创建失败")
     }
 
-    // 插入默认商品分类
     try {
       const defaultCategories = [
         { id: 'cat-1', name: '数码产品', slug: 'digital', icon: '📱', sort: 1 },
@@ -101,7 +107,6 @@ export async function GET() {
         { id: 'cat-3', name: '图书文具', slug: 'books', icon: '📚', sort: 3 },
         { id: 'cat-4', name: '服饰穿搭', slug: 'fashion', icon: '👕', sort: 4 },
       ]
-
       for (const cat of defaultCategories) {
         await pgPool.query(
           `INSERT INTO "product_categories" ("id", "name", "slug", "icon", "sort_order")
@@ -111,24 +116,12 @@ export async function GET() {
         )
       }
       results.push("✅ 默认商品分类已插入")
-    } catch (e: any) {
-      results.push("⚠️ 默认分类: " + e.message.substring(0, 80))
+    } catch {
+      results.push("⚠️ 默认分类插入失败")
     }
 
-    return NextResponse.json({
-      success: true,
-      message: "数据库表初始化完成",
-      steps: results,
-    })
-  } catch (error: any) {
-    return NextResponse.json(
-      {
-        success: false,
-        message: "初始化失败",
-        error: error.message,
-        steps: results,
-      },
-      { status: 500 }
-    )
+    return NextResponse.json({ success: true, message: "数据库表初始化完成", steps: results })
+  } catch {
+    return NextResponse.json({ success: false, message: "初始化失败", steps: results }, { status: 500 })
   }
 }

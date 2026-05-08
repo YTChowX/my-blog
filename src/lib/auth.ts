@@ -4,17 +4,22 @@ import bcrypt from "bcryptjs"
 import { z } from "zod"
 import { pgPool } from "@/lib/db"
 
+// 启动时校验 NEXTAUTH_SECRET
+if (!process.env.NEXTAUTH_SECRET) {
+  console.error("[SECURITY] NEXTAUTH_SECRET 环境变量未设置，JWT 签名将不安全")
+}
+
 const credentialsSchema = z.object({
   email: z.string().email(),
-  password: z.string().min(6),
+  password: z.string().min(8, "密码至少 8 个字符"),
 })
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   secret: process.env.NEXTAUTH_SECRET,
-  trustHost: true,
+  trustHost: false,
   session: {
     strategy: "jwt",
-    maxAge: 30 * 24 * 60 * 60,
+    maxAge: 7 * 24 * 60 * 60, // 7 天过期
   },
   pages: {
     signIn: "/auth/signin",
@@ -55,7 +60,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             role: user.role,
           }
         } catch (err) {
-          console.error("Authorize error:", err)
+          console.error("Authorize error")
           return null
         }
       },

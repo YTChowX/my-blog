@@ -1,9 +1,20 @@
 import { NextResponse } from "next/server"
+import { auth } from "@/lib/auth"
 import { pgPool } from "@/lib/db"
 import bcrypt from "bcryptjs"
 import { randomUUID } from "crypto"
 
 export async function GET() {
+  // 安全检查：仅允许已认证的管理员调用
+  try {
+    const session = await auth()
+    if (!session || session.user.role !== "ADMIN") {
+      return NextResponse.json({ error: "未授权" }, { status: 401 })
+    }
+  } catch {
+    return NextResponse.json({ error: "认证服务不可用" }, { status: 500 })
+  }
+
   const results: string[] = []
 
   try {
@@ -76,7 +87,6 @@ export async function GET() {
       }
     }
 
-    // 创建索引
     const indexes = [
       `CREATE UNIQUE INDEX IF NOT EXISTS "users_email_key" ON "users"("email")`,
       `CREATE UNIQUE INDEX IF NOT EXISTS "accounts_provider_providerAccountId_key" ON "accounts"("provider", "providerAccountId")`,
@@ -107,15 +117,15 @@ export async function GET() {
             `INSERT INTO "users" ("id", "email", "name", "password", "role") VALUES ($1, $2, $3, $4, $5)`,
             [id, adminEmail, "管理员", hashedPassword, "ADMIN"]
           )
-          results.push(`✅ 管理员账户创建成功: ${adminEmail}`)
+          results.push("✅ 管理员账户创建成功")
         }
       }
     } catch (e: any) {
-      results.push("❌ 管理员创建失败: " + e.message.substring(0, 100))
+      results.push("❌ 管理员创建失败")
     }
 
     return NextResponse.json({ success: true, message: "数据库初始化完成", steps: results })
-  } catch (error: any) {
-    return NextResponse.json({ success: false, message: "初始化失败", error: error.message, steps: results }, { status: 500 })
+  } catch {
+    return NextResponse.json({ success: false, message: "初始化失败", steps: results }, { status: 500 })
   }
 }
