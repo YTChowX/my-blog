@@ -2,10 +2,8 @@ import { pgPool } from "@/lib/db"
 import { notFound } from "next/navigation"
 import Link from "next/link"
 
-export async function generateStaticParams() {
-  const result = await pgPool.query(`SELECT slug FROM "products" WHERE "status" = 'active'`)
-  return result.rows.map((row: any) => ({ slug: row.slug }))
-}
+// 强制动态渲染，避免构建时连接数据库
+export const dynamic = 'force-dynamic'
 
 export default async function ProductDetailPage({
   params,

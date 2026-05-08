@@ -11,6 +11,10 @@ const postSchema = z.object({
   category: z.string().default("未分类"),
   tags: z.array(z.string()).default([]),
   published: z.boolean().default(false),
+  location: z.string().optional(),
+  mood: z.string().optional(),
+  weather: z.string().optional(),
+  cover_image: z.string().optional(),
 })
 
 export async function GET(
@@ -52,8 +56,8 @@ export async function PUT(
     }
 
     await pgPool.query(
-      `UPDATE "posts" SET "title" = $1, "slug" = $2, "content" = $3, "excerpt" = $4, "published" = $5, "category" = $6, "tags" = $7, "updatedAt" = NOW() WHERE "id" = $8`,
-      [data.title, data.slug, data.content, data.excerpt || null, data.published, data.category, JSON.stringify(data.tags), id]
+      `UPDATE "posts" SET "title" = $1, "slug" = $2, "content" = $3, "excerpt" = $4, "published" = $5, "category" = $6, "tags" = $7, "updatedAt" = NOW(), "location" = $8, "mood" = $9, "weather" = $10, "cover_image" = $11 WHERE "id" = $12`,
+      [data.title, data.slug, data.content, data.excerpt || null, data.published, data.category, JSON.stringify(data.tags), data.location || null, data.mood || null, data.weather || null, data.cover_image || null, id]
     )
 
     return NextResponse.json({ success: true })

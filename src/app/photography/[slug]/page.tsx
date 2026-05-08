@@ -3,10 +3,8 @@ import { notFound } from "next/navigation"
 import Image from "next/image"
 import Link from "next/link"
 
-export async function generateStaticParams() {
-  const result = await pgPool.query(`SELECT slug FROM "albums" WHERE "is_public" = true`)
-  return result.rows.map((row: any) => ({ slug: row.slug }))
-}
+// 强制动态渲染，避免构建时连接数据库
+export const dynamic = 'force-dynamic'
 
 export default async function AlbumDetailPage({
   params,

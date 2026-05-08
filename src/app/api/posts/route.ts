@@ -12,6 +12,10 @@ const postSchema = z.object({
   category: z.string().default("未分类"),
   tags: z.array(z.string()).default([]),
   published: z.boolean().default(false),
+  location: z.string().optional(),
+  mood: z.string().optional(),
+  weather: z.string().optional(),
+  cover_image: z.string().optional(),
 })
 
 export async function POST(req: NextRequest) {
@@ -31,9 +35,9 @@ export async function POST(req: NextRequest) {
 
     const id = randomUUID()
     await pgPool.query(
-      `INSERT INTO "posts" ("id", "title", "slug", "content", "excerpt", "published", "category", "tags", "authorId")
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
-      [id, data.title, data.slug, data.content, data.excerpt || null, data.published, data.category, JSON.stringify(data.tags), session.user.id]
+      `INSERT INTO "posts" ("id", "title", "slug", "content", "excerpt", "published", "category", "tags", "authorId", "location", "mood", "weather", "cover_image")
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`,
+      [id, data.title, data.slug, data.content, data.excerpt || null, data.published, data.category, JSON.stringify(data.tags), session.user.id, data.location || null, data.mood || null, data.weather || null, data.cover_image || null]
     )
 
     return NextResponse.json({ id, success: true }, { status: 201 })
@@ -51,7 +55,7 @@ export async function GET(req: NextRequest) {
     const category = searchParams.get("category")
     const publishedOnly = searchParams.get("published") === "true"
 
-    let sql = `SELECT id, title, slug, excerpt, category, tags, published, "createdAt", "coverImage" FROM "posts" WHERE 1=1`
+    let sql = `SELECT id, title, slug, excerpt, category, tags, published, "createdAt", "coverImage", location, mood, weather, cover_image FROM "posts" WHERE 1=1`
     const params: any[] = []
     let idx = 1
 
