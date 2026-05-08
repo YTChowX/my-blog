@@ -1,3 +1,5 @@
+import Link from "next/link"
+
 export default function Footer() {
   return (
     <footer className="border-t border-zinc-200 dark:border-zinc-800 mt-auto">
@@ -12,14 +14,18 @@ export default function Footer() {
           <div>
             <h3 className="font-semibold text-zinc-900 dark:text-zinc-100 mb-2">快速导航</h3>
             <ul className="space-y-1 text-sm text-zinc-500 dark:text-zinc-400">
-              <li><a href="/blog" className="hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors">博客文章</a></li>
-              <li><a href="/tech" className="hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors">编程开发</a></li>
-              <li><a href="/photography" className="hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors">摄影作品</a></li>
+              <li><Link href="/blog" className="hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors">博客文章</Link></li>
+              <li><Link href="/tech" className="hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors">编程开发</Link></li>
+              <li><Link href="/photography" className="hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors">摄影作品</Link></li>
+              <li><Link href="/life" className="hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors">生活记录</Link></li>
+              <li><Link href="/search" className="hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors">搜索</Link></li>
             </ul>
           </div>
           <div>
-            <h3 className="font-semibold text-zinc-900 dark:text-zinc-100 mb-2">联系方式</h3>
+            <h3 className="font-semibold text-zinc-900 dark:text-zinc-100 mb-2">更多</h3>
             <ul className="space-y-1 text-sm text-zinc-500 dark:text-zinc-400">
+              <li><Link href="/about" className="hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors">关于我</Link></li>
+              <li><Link href="/sitemap.xml" className="hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors">网站地图</Link></li>
               <li>📧 hello@example.com</li>
               <li>🐙 github.com/yourname</li>
             </ul>
@@ -30,5 +36,5 @@ export default function Footer() {
         </div>
       </div>
     </footer>
-  );
+  )
 }
