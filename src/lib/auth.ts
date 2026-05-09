@@ -11,7 +11,7 @@ if (!process.env.NEXTAUTH_SECRET) {
 
 const credentialsSchema = z.object({
   email: z.string().email(),
-  password: z.string().min(8, "密码至少 8 个字符"),
+  password: z.string().min(1, "请输入密码"),
 })
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
@@ -62,7 +62,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             role: user.role,
           }
         } catch (err) {
-          console.error("Authorize error:", err)
+          console.error("[Authorize] Error occurred:", {
+            errorMessage: err instanceof Error ? err.message : "Unknown error",
+            errorStack: err instanceof Error ? err.stack : undefined,
+          })
           return null
         }
       },
