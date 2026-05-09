@@ -3,7 +3,6 @@ import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Providers from "@/components/Providers";
-import { ThemeProvider } from "next-themes";
 
 const SITE_URL = process.env.NEXTAUTH_URL || "https://my-blog-one-snowy.vercel.app"
 

@@ -1,23 +1,44 @@
 "use client";
 
-import { useTheme } from "next-themes";
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
+
+function getTheme(): string {
+  if (typeof window === "undefined") return "light";
+  return localStorage.getItem("theme") || "light";
+}
+
+function applyTheme(theme: string) {
+  if (theme === "dark") {
+    document.documentElement.classList.add("dark");
+  } else {
+    document.documentElement.classList.remove("dark");
+  }
+  localStorage.setItem("theme", theme);
+}
 
 export default function ThemeToggle() {
-  const { resolvedTheme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
+  const [isDark, setIsDark] = useState(false);
 
-  useEffect(() => setMounted(true), []);
+  useEffect(() => {
+    const theme = getTheme();
+    setIsDark(theme === "dark");
+    setMounted(true);
+  }, []);
+
+  const toggle = () => {
+    const newTheme = isDark ? "light" : "dark";
+    applyTheme(newTheme);
+    setIsDark(newTheme === "dark");
+  };
 
   if (!mounted) {
     return <div className="w-9 h-9" />;
   }
 
-  const isDark = resolvedTheme === "dark";
-
   return (
     <button
-      onClick={() => setTheme(isDark ? "light" : "dark")}
+      onClick={toggle}
       className="p-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
       aria-label={isDark ? "切换到亮色模式" : "切换到暗色模式"}
       title={isDark ? "切换到亮色模式" : "切换到暗色模式"}
