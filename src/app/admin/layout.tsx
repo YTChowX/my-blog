@@ -3,7 +3,7 @@ import { auth } from "@/lib/auth"
 import { redirect } from "next/navigation"
 
 const sidebarLinks = [
-  { href: "/admin", label: "仪表盘", icon: "📊" },
+  { href: "/admin", label: "仪表�?, icon: "📊" },
   { href: "/admin/posts", label: "文章管理", icon: "📝" },
   { href: "/admin/snippets", label: "代码片段", icon: "💻" },
   { href: "/admin/albums", label: "相册管理", icon: "📷" },

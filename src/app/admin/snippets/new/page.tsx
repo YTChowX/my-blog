@@ -76,7 +76,7 @@ export default function NewSnippetPage() {
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-2xl font-bold">新建代码片段</h1>
         <Link href="/admin/snippets" className="text-zinc-500 hover:text-zinc-900">
-          ← 返回列表
+          �?返回列表
         </Link>
       </div>
 
@@ -93,7 +93,7 @@ export default function NewSnippetPage() {
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-zinc-800 dark:border-zinc-700"
-              placeholder="例如：React Hooks 最佳实践"
+              placeholder="例如：React Hooks 最佳实�?
               required
             />
           </div>
@@ -120,7 +120,7 @@ export default function NewSnippetPage() {
             onChange={(e) => setDescription(e.target.value)}
             rows={2}
             className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-zinc-800 dark:border-zinc-700"
-            placeholder="简要描述这段代码的用途"
+            placeholder="简要描述这段代码的用�?
           />
         </div>
 
@@ -142,7 +142,7 @@ export default function NewSnippetPage() {
             onChange={(e) => setCode(e.target.value)}
             rows={12}
             className="w-full px-3 py-2 border rounded-lg font-mono text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-zinc-800 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-900"
-            placeholder="// 在这里粘贴你的代码..."
+            placeholder="// 在这里粘贴你的代�?.."
             required
           />
         </div>
@@ -163,9 +163,9 @@ export default function NewSnippetPage() {
           <button
             type="submit"
             disabled={saving}
-            className="px-6 py-2 bg-zinc-900 text-white rounded-lg hover:bg-zinc-700 disabled:opacity-50 transition-colors"
+            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
           >
-            {saving ? "保存中..." : "创建片段"}
+            {saving ? "保存�?.." : "创建片段"}
           </button>
           <Link
             href="/admin/snippets"

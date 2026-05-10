@@ -35,11 +35,11 @@ export default async function AdminProductsPage() {
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-2xl font-bold">🛒 商品管理</h1>
-          <p className="text-zinc-500">上架和管理商品</p>
+          <p className="text-zinc-500">上架和管理商�?/p>
         </div>
         <Link
           href="/admin/products/new"
-          className="px-4 py-2 bg-zinc-900 text-white rounded-lg hover:bg-zinc-700 transition-colors"
+          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
         >
           + 上架商品
         </Link>
@@ -48,11 +48,11 @@ export default async function AdminProductsPage() {
       {products.length === 0 ? (
         <div className="text-center py-16 border-2 border-dashed rounded-xl">
           <div className="text-6xl mb-4">🛒</div>
-          <h3 className="text-xl font-medium mb-2">还没有商品</h3>
-          <p className="text-zinc-500 mb-4">上架你的第一个商品</p>
+          <h3 className="text-xl font-medium mb-2">还没有商�?/h3>
+          <p className="text-zinc-500 mb-4">上架你的第一个商�?/p>
           <Link
             href="/admin/products/new"
-            className="inline-block px-4 py-2 bg-zinc-900 text-white rounded-lg hover:bg-zinc-700"
+            className="inline-block px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
           >
             上架商品
           </Link>
@@ -104,7 +104,7 @@ export default async function AdminProductsPage() {
                 </div>
                 <div className="flex items-center justify-between mt-2 text-sm text-zinc-500">
                   <span>库存: {product.stock}</span>
-                  <span>{product.categoryName || "未分类"}</span>
+                  <span>{product.categoryName || "未分�?}</span>
                 </div>
                 <div className="flex items-center gap-2 mt-4">
                   <Link

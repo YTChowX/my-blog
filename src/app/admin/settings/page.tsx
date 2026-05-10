@@ -3,11 +3,11 @@
 import { useState, useEffect } from "react"
 
 const defaultSettings: Record<string, string> = {
-  site_name: "我的生活笔记",
-  site_description: "记录生活、分享技术、留住美好瞬间",
-  site_keywords: "博客, 生活, 编程, 摄影, 购物",
-  author_name: "博主",
-  author_bio: "一个热爱生活和技术的普通人",
+  site_name: "æˆ‘çš„ç”Ÿæ´»ç¬”è®°",
+  site_description: "è®°å½•ç”Ÿæ´»ã€åˆ†äº«æŠ€æœ¯ã€ç•™ä½ç¾Žå¥½çž¬é—?,
+  site_keywords: "åšå®¢, ç”Ÿæ´», ç¼–ç¨‹, æ‘„å½±, è´­ç‰©",
+  author_name: "åšä¸»",
+  author_bio: "ä¸€ä¸ªçƒ­çˆ±ç”Ÿæ´»å’ŒæŠ€æœ¯çš„æ™®é€šäºº",
   author_email: "hello@example.com",
   github_url: "",
   twitter_url: "",
@@ -39,10 +39,10 @@ export default function SettingsPage() {
         setSettings({ ...defaultSettings, ...data })
       } else {
         const err = await res.json()
-        setError(err.error || "加载设置失败")
+        setError(err.error || "åŠ è½½è®¾ç½®å¤±è´¥")
       }
     } catch (e: any) {
-      setError("加载设置失败: " + e.message)
+      setError("åŠ è½½è®¾ç½®å¤±è´¥: " + e.message)
     }
     setLoading(false)
   }
@@ -58,14 +58,14 @@ export default function SettingsPage() {
         body: JSON.stringify(settings),
       })
       if (res.ok) {
-        setMessage("✅ 设置已保存")
+        setMessage("âœ?è®¾ç½®å·²ä¿å­?)
         setTimeout(() => setMessage(""), 3000)
       } else {
         const err = await res.json()
-        setError(err.error || "保存失败")
+        setError(err.error || "ä¿å­˜å¤±è´¥")
       }
     } catch (e: any) {
-      setError("保存失败: " + e.message)
+      setError("ä¿å­˜å¤±è´¥: " + e.message)
     }
     setSaving(false)
   }
@@ -75,12 +75,12 @@ export default function SettingsPage() {
   }
 
   if (loading) {
-    return <div className="text-center py-12">加载中...</div>
+    return <div className="text-center py-12">åŠ è½½ä¸?..</div>
   }
 
   return (
     <div className="max-w-3xl">
-      <h1 className="text-2xl font-bold mb-6">⚙️ 系统设置</h1>
+      <h1 className="text-2xl font-bold mb-6">âš™ï¸ ç³»ç»Ÿè®¾ç½®</h1>
 
       {message && (
         <div className="p-3 rounded-lg bg-green-50 text-green-700 text-sm mb-6">{message}</div>
@@ -89,17 +89,17 @@ export default function SettingsPage() {
       {error && (
         <div className="p-3 rounded-lg bg-red-50 text-red-600 text-sm mb-6">
           {error}
-          <button onClick={fetchSettings} className="ml-2 underline">重试</button>
+          <button onClick={fetchSettings} className="ml-2 underline">é‡è¯•</button>
         </div>
       )}
 
       <div className="space-y-8">
-        {/* 站点信息 */}
+        {/* ç«™ç‚¹ä¿¡æ¯ */}
         <section className="border rounded-xl p-6">
-          <h2 className="text-lg font-semibold mb-4">站点信息</h2>
+          <h2 className="text-lg font-semibold mb-4">ç«™ç‚¹ä¿¡æ¯</h2>
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium mb-1">站点名称</label>
+              <label className="block text-sm font-medium mb-1">ç«™ç‚¹åç§°</label>
               <input
                 type="text"
                 value={settings.site_name}
@@ -108,7 +108,7 @@ export default function SettingsPage() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">站点描述</label>
+              <label className="block text-sm font-medium mb-1">ç«™ç‚¹æè¿°</label>
               <textarea
                 value={settings.site_description}
                 onChange={(e) => updateSetting("site_description", e.target.value)}
@@ -117,7 +117,7 @@ export default function SettingsPage() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">站点关键词（逗号分隔）</label>
+              <label className="block text-sm font-medium mb-1">ç«™ç‚¹å…³é”®è¯ï¼ˆé€—å·åˆ†éš”ï¼?/label>
               <input
                 type="text"
                 value={settings.site_keywords}
@@ -128,12 +128,12 @@ export default function SettingsPage() {
           </div>
         </section>
 
-        {/* 作者信息 */}
+        {/* ä½œè€…ä¿¡æ?*/}
         <section className="border rounded-xl p-6">
-          <h2 className="text-lg font-semibold mb-4">作者信息</h2>
+          <h2 className="text-lg font-semibold mb-4">ä½œè€…ä¿¡æ?/h2>
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium mb-1">作者名称</label>
+              <label className="block text-sm font-medium mb-1">ä½œè€…åç§?/label>
               <input
                 type="text"
                 value={settings.author_name}
@@ -142,7 +142,7 @@ export default function SettingsPage() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">作者简介</label>
+              <label className="block text-sm font-medium mb-1">ä½œè€…ç®€ä»?/label>
               <textarea
                 value={settings.author_bio}
                 onChange={(e) => updateSetting("author_bio", e.target.value)}
@@ -151,7 +151,7 @@ export default function SettingsPage() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">联系邮箱</label>
+              <label className="block text-sm font-medium mb-1">è”ç³»é‚®ç®±</label>
               <input
                 type="email"
                 value={settings.author_email}
@@ -162,15 +162,15 @@ export default function SettingsPage() {
           </div>
         </section>
 
-        {/* 社交链接 */}
+        {/* ç¤¾äº¤é“¾æŽ¥ */}
         <section className="border rounded-xl p-6">
-          <h2 className="text-lg font-semibold mb-4">社交链接</h2>
+          <h2 className="text-lg font-semibold mb-4">ç¤¾äº¤é“¾æŽ¥</h2>
           <div className="space-y-4">
             {[
               { key: "github_url", label: "GitHub", placeholder: "https://github.com/yourname" },
               { key: "twitter_url", label: "Twitter / X", placeholder: "https://twitter.com/yourname" },
-              { key: "weibo_url", label: "微博", placeholder: "https://weibo.com/yourname" },
-              { key: "bilibili_url", label: "B站", placeholder: "https://space.bilibili.com/yourid" },
+              { key: "weibo_url", label: "å¾®åš", placeholder: "https://weibo.com/yourname" },
+              { key: "bilibili_url", label: "Bç«?, placeholder: "https://space.bilibili.com/yourid" },
             ].map((item) => (
               <div key={item.key}>
                 <label className="block text-sm font-medium mb-1">{item.label}</label>
@@ -186,22 +186,22 @@ export default function SettingsPage() {
           </div>
         </section>
 
-        {/* 运维设置 */}
+        {/* è¿ç»´è®¾ç½® */}
         <section className="border rounded-xl p-6">
-          <h2 className="text-lg font-semibold mb-4">运维设置</h2>
+          <h2 className="text-lg font-semibold mb-4">è¿ç»´è®¾ç½®</h2>
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium mb-1">ICP 备案号（选填）</label>
+              <label className="block text-sm font-medium mb-1">ICP å¤‡æ¡ˆå·ï¼ˆé€‰å¡«ï¼?/label>
               <input
                 type="text"
                 value={settings.icp_number}
                 onChange={(e) => updateSetting("icp_number", e.target.value)}
-                placeholder="京ICP备XXXXXXXX号"
+                placeholder="äº¬ICPå¤‡XXXXXXXXå?
                 className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-zinc-800 dark:border-zinc-700"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Google Analytics ID（选填）</label>
+              <label className="block text-sm font-medium mb-1">Google Analytics IDï¼ˆé€‰å¡«ï¼?/label>
               <input
                 type="text"
                 value={settings.google_analytics}
@@ -211,12 +211,12 @@ export default function SettingsPage() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">百度统计 ID（选填）</label>
+              <label className="block text-sm font-medium mb-1">ç™¾åº¦ç»Ÿè®¡ IDï¼ˆé€‰å¡«ï¼?/label>
               <input
                 type="text"
                 value={settings.baidu_analytics}
                 onChange={(e) => updateSetting("baidu_analytics", e.target.value)}
-                placeholder="百度统计代码"
+                placeholder="ç™¾åº¦ç»Ÿè®¡ä»£ç "
                 className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-zinc-800 dark:border-zinc-700"
               />
             </div>
@@ -226,9 +226,9 @@ export default function SettingsPage() {
         <button
           onClick={handleSave}
           disabled={saving}
-          className="w-full py-3 bg-zinc-900 text-white rounded-lg font-medium hover:bg-zinc-700 disabled:opacity-50 transition-colors"
+          className="w-full py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 transition-colors"
         >
-          {saving ? "保存中..." : "保存所有设置"}
+          {saving ? "ä¿å­˜ä¸?.." : "ä¿å­˜æ‰€æœ‰è®¾ç½?}
         </button>
       </div>
     </div>
