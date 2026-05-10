@@ -47,17 +47,17 @@ export default function SnippetsPage() {
         setSnippets(data)
       } else {
         const err = await res.json()
-        setError(err.error || "åŠ è½½ä»£ç ç‰‡æ®µå¤±è´¥")
+        setError(err.error || "加载代码片段失败")
       }
     } catch (e: any) {
-      setError("åŠ è½½å¤±è´¥: " + e.message)
+      setError("加载失败: " + e.message)
     } finally {
       setLoading(false)
     }
   }
 
   const handleDelete = async (id: string) => {
-    if (!confirm("ç¡®å®šè¦åˆ é™¤è¿™ä¸ªä»£ç ç‰‡æ®µå—ï¼?)) return
+    if (!confirm("确定要删除这个代码片段吗？")) return
 
     try {
       const res = await fetch(`/api/snippets/${id}`, { method: "DELETE" })
@@ -65,10 +65,10 @@ export default function SnippetsPage() {
         setSnippets(snippets.filter((s) => s.id !== id))
       } else {
         const err = await res.json()
-        alert("åˆ é™¤å¤±è´¥: " + (err.error || "æœªçŸ¥é”™è¯¯"))
+        alert("删除失败: " + (err.error || "未知错误"))
       }
     } catch (e: any) {
-      alert("åˆ é™¤å¤±è´¥: " + e.message)
+      alert("删除失败: " + e.message)
     }
   }
 
@@ -79,7 +79,7 @@ export default function SnippetsPage() {
   if (loading) {
     return (
       <div className="max-w-6xl mx-auto px-4 py-8">
-        <div className="text-center py-12">åŠ è½½ä¸?..</div>
+        <div className="text-center py-12">加载中...</div>
       </div>
     )
   }
@@ -88,21 +88,21 @@ export default function SnippetsPage() {
     <div className="max-w-6xl mx-auto px-4 py-8">
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold">ä»£ç ç‰‡æ®µç®¡ç†</h1>
-          <p className="text-zinc-500 text-sm mt-1">ç®¡ç†å’Œåˆ†äº«ä»£ç ç‰‡æ®?/p>
+          <h1 className="text-2xl font-bold">代码片段管理</h1>
+          <p className="text-zinc-500 text-sm mt-1">管理和分享代码片段</p>
         </div>
         <div className="flex gap-3">
           <Link
             href="/admin"
             className="px-4 py-2 border rounded-lg hover:bg-zinc-50 transition-colors"
           >
-            è¿”å›ž
+            返回
           </Link>
           <Link
             href="/admin/snippets/new"
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            className="px-4 py-2 bg-zinc-900 text-white rounded-lg hover:bg-zinc-700 transition-colors"
           >
-            + æ–°å»ºç‰‡æ®µ
+            + 新建片段
           </Link>
         </div>
       </div>
@@ -110,20 +110,20 @@ export default function SnippetsPage() {
       {error && (
         <div className="p-4 mb-6 rounded-lg bg-red-50 text-red-600">
           {error}
-          <button onClick={fetchSnippets} className="ml-2 underline">é‡è¯•</button>
+          <button onClick={fetchSnippets} className="ml-2 underline">重试</button>
         </div>
       )}
 
       {snippets.length === 0 && !error ? (
         <div className="text-center py-16 border rounded-xl">
-          <div className="text-6xl mb-4">ðŸ’»</div>
-          <h3 className="text-xl font-medium mb-2">æš‚æ— ä»£ç ç‰‡æ®µ</h3>
-          <p className="text-zinc-500 mb-4">å¼€å§‹åˆ›å»ºä½ çš„ç¬¬ä¸€ä¸ªä»£ç ç‰‡æ®µå§</p>
+          <div className="text-6xl mb-4">💻</div>
+          <h3 className="text-xl font-medium mb-2">暂无代码片段</h3>
+          <p className="text-zinc-500 mb-4">开始创建你的第一个代码片段吧</p>
           <Link
             href="/admin/snippets/new"
-            className="inline-block px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            className="inline-block px-6 py-2 bg-zinc-900 text-white rounded-lg"
           >
-            åˆ›å»ºä»£ç ç‰‡æ®µ
+            创建代码片段
           </Link>
         </div>
       ) : (
@@ -131,12 +131,12 @@ export default function SnippetsPage() {
           <table className="w-full">
             <thead>
               <tr className="bg-zinc-50 dark:bg-zinc-800">
-                <th className="px-4 py-3 text-left text-sm font-medium">æ ‡é¢˜</th>
-                <th className="px-4 py-3 text-left text-sm font-medium">è¯­è¨€</th>
-                <th className="px-4 py-3 text-left text-sm font-medium">æ ‡ç­¾</th>
-                <th className="px-4 py-3 text-left text-sm font-medium">çŠ¶æ€?/th>
-                <th className="px-4 py-3 text-left text-sm font-medium">æµè§ˆ</th>
-                <th className="px-4 py-3 text-left text-sm font-medium">æ“ä½œ</th>
+                <th className="px-4 py-3 text-left text-sm font-medium">标题</th>
+                <th className="px-4 py-3 text-left text-sm font-medium">语言</th>
+                <th className="px-4 py-3 text-left text-sm font-medium">标签</th>
+                <th className="px-4 py-3 text-left text-sm font-medium">状态</th>
+                <th className="px-4 py-3 text-left text-sm font-medium">浏览</th>
+                <th className="px-4 py-3 text-left text-sm font-medium">操作</th>
               </tr>
             </thead>
             <tbody className="divide-y">
@@ -175,7 +175,7 @@ export default function SnippetsPage() {
                           : "bg-zinc-100 text-zinc-600"
                       }`}
                     >
-                      {snippet.is_public ? "å…¬å¼€" : "ç§æœ‰"}
+                      {snippet.is_public ? "公开" : "私有"}
                     </span>
                   </td>
                   <td className="px-4 py-3 text-sm text-zinc-500">
@@ -187,14 +187,14 @@ export default function SnippetsPage() {
                         href={`/admin/snippets/${snippet.id}/edit`}
                         className="text-sm text-blue-600 hover:underline"
                       >
-                        ç¼–è¾‘
+                        编辑
                       </Link>
                       <span className="text-zinc-300">|</span>
                       <button
                         onClick={() => handleDelete(snippet.id)}
                         className="text-sm text-red-600 hover:underline"
                       >
-                        åˆ é™¤
+                        删除
                       </button>
                     </div>
                   </td>

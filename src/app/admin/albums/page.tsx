@@ -26,11 +26,11 @@ export default async function AdminAlbumsPage() {
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-2xl font-bold">📷 相册管理</h1>
-          <p className="text-zinc-500">创建和管理摄影相�?/p>
+          <p className="text-zinc-500">创建和管理摄影相册</p>
         </div>
         <Link
           href="/admin/albums/new"
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          className="px-4 py-2 bg-zinc-900 text-white rounded-lg hover:bg-zinc-700 transition-colors"
         >
           + 新建相册
         </Link>
@@ -39,18 +39,18 @@ export default async function AdminAlbumsPage() {
       {error && (
         <div className="p-4 mb-6 rounded-lg bg-red-50 text-red-600">
           {error}
-          <p className="text-sm mt-1">请检查数据库连接或稍后重�?/p>
+          <p className="text-sm mt-1">请检查数据库连接或稍后重试</p>
         </div>
       )}
 
       {albums.length === 0 && !error ? (
         <div className="text-center py-16 border-2 border-dashed rounded-xl">
           <div className="text-6xl mb-4">📷</div>
-          <h3 className="text-xl font-medium mb-2">还没有相�?/h3>
-          <p className="text-zinc-500 mb-4">创建你的第一个相册，开始记录精彩瞬�?/p>
+          <h3 className="text-xl font-medium mb-2">还没有相册</h3>
+          <p className="text-zinc-500 mb-4">创建你的第一个相册，开始记录精彩瞬间</p>
           <Link
             href="/admin/albums/new"
-            className="inline-block px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            className="inline-block px-4 py-2 bg-zinc-900 text-white rounded-lg hover:bg-zinc-700"
           >
             创建相册
           </Link>
@@ -72,11 +72,13 @@ export default async function AdminAlbumsPage() {
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-4xl">
-                    🖼�?                  </div>
+                    🖼️
+                  </div>
                 )}
                 <div className="absolute top-2 right-2 flex gap-2">
                   <span className="px-2 py-1 bg-black/50 text-white text-xs rounded">
-                    {album.photo_count} 张照�?                  </span>
+                    {album.photo_count} 张照片
+                  </span>
                   {!album.is_public && (
                     <span className="px-2 py-1 bg-yellow-500 text-white text-xs rounded">
                       私密

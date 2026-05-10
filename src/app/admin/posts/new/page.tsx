@@ -7,27 +7,27 @@ import dynamic from "next/dynamic"
 
 const MDEditor = dynamic(() => import("@uiw/react-md-editor"), { ssr: false })
 
-const categories = ["生活", "购物", "编程", "摄影", "未分�?]
+const categories = ["生活", "购物", "编程", "摄影", "未分类"]
 
 const moods = [
-  { value: "happy", label: "😊 开�? },
+  { value: "happy", label: "😊 开心" },
   { value: "sad", label: "😔 难过" },
   { value: "excited", label: "🎉 兴奋" },
   { value: "calm", label: "😌 平静" },
   { value: "tired", label: "😴 疲惫" },
   { value: "loved", label: "❤️ 幸福" },
-  { value: "thinking", label: "🤔 思�? },
-  { value: "coffee", label: "�?咖啡" },
+  { value: "thinking", label: "🤔 思考" },
+  { value: "coffee", label: "☕ 咖啡" },
 ]
 
-const weathers = ["☀�?晴天", "🌧�?雨天", "☁️ 阴天", "❄️ 雪天", "🌤�?多云"]
+const weathers = ["☀️ 晴天", "🌧️ 雨天", "☁️ 阴天", "❄️ 雪天", "🌤️ 多云"]
 
 export default function NewPostPage() {
   const [title, setTitle] = useState("")
   const [slug, setSlug] = useState("")
   const [content, setContent] = useState("")
   const [excerpt, setExcerpt] = useState("")
-  const [category, setCategory] = useState("未分�?)
+  const [category, setCategory] = useState("未分类")
   const [tags, setTags] = useState("")
   const [published, setPublished] = useState(false)
   const [location, setLocation] = useState("")
@@ -122,7 +122,7 @@ export default function NewPostPage() {
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-2xl font-bold">新建文章</h1>
         <Link href="/admin" className="text-zinc-500 hover:text-zinc-900">
-          �?返回管理
+          ← 返回管理
         </Link>
       </div>
 
@@ -196,7 +196,7 @@ export default function NewPostPage() {
                   type="text"
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
-                  placeholder="例如: 北京·三里�?
+                  placeholder="例如: 北京·三里屯"
                   className="w-full px-3 py-2 border rounded-lg text-sm"
                 />
               </div>
@@ -230,9 +230,9 @@ export default function NewPostPage() {
           </div>
         )}
 
-        {/* 封面�?*/}
+        {/* 封面图 */}
         <div>
-          <label className="block text-sm font-medium mb-2">封面�?/label>
+          <label className="block text-sm font-medium mb-2">封面图</label>
           {coverImage ? (
             <div className="relative w-full aspect-video rounded-lg overflow-hidden bg-zinc-100">
               <img src={coverImage} alt="封面" className="w-full h-full object-cover" />
@@ -248,11 +248,11 @@ export default function NewPostPage() {
             <label className="block w-full aspect-video border-2 border-dashed rounded-lg cursor-pointer hover:border-blue-500 transition-colors">
               <div className="w-full h-full flex flex-col items-center justify-center text-zinc-400">
                 {uploading ? (
-                  <span>上传�?..</span>
+                  <span>上传中...</span>
                 ) : (
                   <>
                     <span className="text-3xl mb-2">📷</span>
-                    <span className="text-sm">点击上传封面�?/span>
+                    <span className="text-sm">点击上传封面图</span>
                   </>
                 )}
                 <input
@@ -274,7 +274,7 @@ export default function NewPostPage() {
             onChange={(e) => setExcerpt(e.target.value)}
             rows={2}
             className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-zinc-800 dark:border-zinc-700"
-            placeholder="文章简短描述，会显示在列表�?
+            placeholder="文章简短描述，会显示在列表页"
           />
         </div>
 
@@ -305,9 +305,9 @@ export default function NewPostPage() {
           <button
             type="submit"
             disabled={loading}
-            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+            className="px-6 py-2 bg-zinc-900 text-white rounded-lg hover:bg-zinc-700 disabled:opacity-50 transition-colors"
           >
-            {loading ? "保存�?.." : "保存文章"}
+            {loading ? "保存中..." : "保存文章"}
           </button>
           <Link
             href="/admin"

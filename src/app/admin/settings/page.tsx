@@ -1,7 +1,6 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import Link from "next/link"
 
 const defaultSettings: Record<string, string> = {
   site_name: "我的生活笔记",
@@ -59,7 +58,7 @@ export default function SettingsPage() {
         body: JSON.stringify(settings),
       })
       if (res.ok) {
-        setMessage("设置已保存")
+        setMessage("✅ 设置已保存")
         setTimeout(() => setMessage(""), 3000)
       } else {
         const err = await res.json()
@@ -81,12 +80,7 @@ export default function SettingsPage() {
 
   return (
     <div className="max-w-3xl">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">系统设置</h1>
-        <Link href="/admin" className="text-sm text-blue-600 hover:underline">
-          返回后台
-        </Link>
-      </div>
+      <h1 className="text-2xl font-bold mb-6">⚙️ 系统设置</h1>
 
       {message && (
         <div className="p-3 rounded-lg bg-green-50 text-green-700 text-sm mb-6">{message}</div>
@@ -232,7 +226,7 @@ export default function SettingsPage() {
         <button
           onClick={handleSave}
           disabled={saving}
-          className="w-full py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 transition-colors"
+          className="w-full py-3 bg-zinc-900 text-white rounded-lg font-medium hover:bg-zinc-700 disabled:opacity-50 transition-colors"
         >
           {saving ? "保存中..." : "保存所有设置"}
         </button>

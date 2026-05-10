@@ -63,7 +63,7 @@ export default function NewAlbumPage() {
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-2xl font-bold">新建相册</h1>
         <Link href="/admin/albums" className="text-zinc-500 hover:text-zinc-900">
-          �?返回列表
+          ← 返回列表
         </Link>
       </div>
 
@@ -81,7 +81,7 @@ export default function NewAlbumPage() {
             value={title}
             onChange={(e) => handleTitleChange(e.target.value)}
             className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-zinc-800 dark:border-zinc-700"
-            placeholder="例如�?024年日本之�?
+            placeholder="例如：2024年日本之旅"
             required
           />
         </div>
@@ -104,7 +104,7 @@ export default function NewAlbumPage() {
             onChange={(e) => setDescription(e.target.value)}
             rows={3}
             className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-zinc-800 dark:border-zinc-700"
-            placeholder="相册简�?.."
+            placeholder="相册简介..."
           />
         </div>
 
@@ -125,9 +125,9 @@ export default function NewAlbumPage() {
           <button
             type="submit"
             disabled={loading}
-            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+            className="px-6 py-2 bg-zinc-900 text-white rounded-lg hover:bg-zinc-700 disabled:opacity-50 transition-colors"
           >
-            {loading ? "创建�?.." : "创建相册"}
+            {loading ? "创建中..." : "创建相册"}
           </button>
           <Link
             href="/admin/albums"

@@ -29,11 +29,11 @@ export default async function AdminPostsPage() {
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-2xl font-bold">📝 文章管理</h1>
-          <p className="text-zinc-500">发布和管理博客文�?/p>
+          <p className="text-zinc-500">发布和管理博客文章</p>
         </div>
         <Link
           href="/admin/posts/new"
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          className="px-4 py-2 bg-zinc-900 text-white rounded-lg hover:bg-zinc-700 transition-colors"
         >
           + 新建文章
         </Link>
@@ -42,11 +42,11 @@ export default async function AdminPostsPage() {
       {posts.length === 0 ? (
         <div className="text-center py-16 border-2 border-dashed rounded-xl">
           <div className="text-6xl mb-4">📝</div>
-          <h3 className="text-xl font-medium mb-2">还没有文�?/h3>
-          <p className="text-zinc-500 mb-4">创建你的第一篇博客文�?/p>
+          <h3 className="text-xl font-medium mb-2">还没有文章</h3>
+          <p className="text-zinc-500 mb-4">创建你的第一篇博客文章</p>
           <Link
             href="/admin/posts/new"
-            className="inline-block px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            className="inline-block px-4 py-2 bg-zinc-900 text-white rounded-lg hover:bg-zinc-700"
           >
             创建文章
           </Link>
@@ -58,7 +58,7 @@ export default async function AdminPostsPage() {
               <tr>
                 <th className="px-4 py-3 text-left text-sm font-medium">标题</th>
                 <th className="px-4 py-3 text-left text-sm font-medium">分类</th>
-                <th className="px-4 py-3 text-left text-sm font-medium">状�?/th>
+                <th className="px-4 py-3 text-left text-sm font-medium">状态</th>
                 <th className="px-4 py-3 text-left text-sm font-medium">日期</th>
                 <th className="px-4 py-3 text-left text-sm font-medium">操作</th>
               </tr>
@@ -79,7 +79,7 @@ export default async function AdminPostsPage() {
                           : "bg-yellow-100 text-yellow-700"
                       }`}
                     >
-                      {post.published ? "已发�? : "草稿"}
+                      {post.published ? "已发布" : "草稿"}
                     </span>
                   </td>
                   <td className="px-4 py-3 text-sm text-zinc-500">

@@ -33,7 +33,8 @@ export default async function AdminPage() {
     console.error(e)
   }
 
-  // 获取最近文�?  let posts: any[] = []
+  // 获取最近文章
+  let posts: any[] = []
   try {
     const result = await pgPool.query(`
       SELECT p.*, u."name" as "authorName"
@@ -57,21 +58,21 @@ export default async function AdminPage() {
     },
     {
       title: "💻 代码片段",
-      description: "管理和分享代�?,
+      description: "管理和分享代码",
       href: "/admin/snippets",
       count: snippetsCount,
       color: "bg-orange-50 text-orange-700",
     },
     {
       title: "📷 相册管理",
-      description: "上传和管理照�?,
+      description: "上传和管理照片",
       href: "/admin/albums",
       count: albumsCount,
       color: "bg-green-50 text-green-700",
     },
     {
       title: "🛒 商品管理",
-      description: "上架和管理商�?,
+      description: "上架和管理商品",
       href: "/admin/products",
       count: productsCount,
       color: "bg-purple-50 text-purple-700",
@@ -104,10 +105,10 @@ export default async function AdminPage() {
         ))}
       </div>
 
-      {/* 最近文�?*/}
+      {/* 最近文章 */}
       <div className="border rounded-xl overflow-hidden">
         <div className="flex items-center justify-between px-4 py-3 bg-zinc-50 dark:bg-zinc-800">
-          <h2 className="font-medium">最近文�?/h2>
+          <h2 className="font-medium">最近文章</h2>
           <Link href="/admin/posts" className="text-sm text-blue-600 hover:underline">
             查看全部
           </Link>
@@ -115,7 +116,7 @@ export default async function AdminPage() {
 
         {posts.length === 0 ? (
           <div className="p-8 text-center text-zinc-500">
-            暂无文章�?Link href="/admin/posts/new" className="text-blue-600 hover:underline">创建第一�?/Link>
+            暂无文章，<Link href="/admin/posts/new" className="text-blue-600 hover:underline">创建第一篇</Link>
           </div>
         ) : (
           <table className="w-full">
@@ -123,7 +124,7 @@ export default async function AdminPage() {
               <tr className="border-t">
                 <th className="px-4 py-3 text-left text-sm font-medium">标题</th>
                 <th className="px-4 py-3 text-left text-sm font-medium">分类</th>
-                <th className="px-4 py-3 text-left text-sm font-medium">状�?/th>
+                <th className="px-4 py-3 text-left text-sm font-medium">状态</th>
                 <th className="px-4 py-3 text-left text-sm font-medium">日期</th>
                 <th className="px-4 py-3 text-left text-sm font-medium">操作</th>
               </tr>
@@ -143,7 +144,7 @@ export default async function AdminPage() {
                           : "bg-yellow-100 text-yellow-700"
                       }`}
                     >
-                      {post.published ? "已发�? : "草稿"}
+                      {post.published ? "已发布" : "草稿"}
                     </span>
                   </td>
                   <td className="px-4 py-3 text-sm text-zinc-500">

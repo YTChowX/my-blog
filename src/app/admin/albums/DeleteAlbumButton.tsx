@@ -8,7 +8,7 @@ export function DeleteAlbumButton({ albumId }: { albumId: string }) {
   const router = useRouter()
 
   const handleDelete = async () => {
-    if (!confirm("确定要删除这个相册吗？所有照片也会被删除�?)) {
+    if (!confirm("确定要删除这个相册吗？所有照片也会被删除。")) {
       return
     }
 
@@ -36,7 +36,7 @@ export function DeleteAlbumButton({ albumId }: { albumId: string }) {
       disabled={loading}
       className="text-sm text-red-600 hover:underline disabled:opacity-50"
     >
-      {loading ? "删除�?.." : "删除"}
+      {loading ? "删除中..." : "删除"}
     </button>
   )
 }

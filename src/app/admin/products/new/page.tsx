@@ -132,7 +132,7 @@ export default function NewProductPage() {
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-2xl font-bold">上架商品</h1>
         <Link href="/admin/products" className="text-zinc-500 hover:text-zinc-900">
-          �?返回列表
+          ← 返回列表
         </Link>
       </div>
 
@@ -253,7 +253,7 @@ export default function NewProductPage() {
             ))}
             <label className="aspect-square rounded-lg border-2 border-dashed flex items-center justify-center cursor-pointer hover:border-blue-500">
               {uploading ? (
-                <span className="text-sm text-zinc-500">上传�?..</span>
+                <span className="text-sm text-zinc-500">上传中...</span>
               ) : (
                 <span className="text-2xl text-zinc-400">+</span>
               )}
@@ -271,7 +271,7 @@ export default function NewProductPage() {
 
         <div className="flex items-center gap-6">
           <div>
-            <label className="block text-sm font-medium mb-1">状�?/label>
+            <label className="block text-sm font-medium mb-1">状态</label>
             <select
               value={status}
               onChange={(e) => setStatus(e.target.value as any)}
@@ -297,9 +297,9 @@ export default function NewProductPage() {
           <button
             type="submit"
             disabled={loading}
-            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+            className="px-6 py-2 bg-zinc-900 text-white rounded-lg hover:bg-zinc-700 disabled:opacity-50 transition-colors"
           >
-            {loading ? "创建�?.." : "上架商品"}
+            {loading ? "创建中..." : "上架商品"}
           </button>
           <Link
             href="/admin/products"

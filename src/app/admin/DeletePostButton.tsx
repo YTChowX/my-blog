@@ -8,7 +8,7 @@ export function DeletePostButton({ postId }: { postId: string }) {
   const router = useRouter()
 
   const handleDelete = async () => {
-    if (!confirm("确定要删除这篇文章吗？此操作不可撤销�?)) {
+    if (!confirm("确定要删除这篇文章吗？此操作不可撤销。")) {
       return
     }
 
@@ -36,7 +36,7 @@ export function DeletePostButton({ postId }: { postId: string }) {
       disabled={loading}
       className="text-sm text-red-600 hover:underline disabled:opacity-50"
     >
-      {loading ? "删除�?.." : "删除"}
+      {loading ? "删除中..." : "删除"}
     </button>
   )
 }
