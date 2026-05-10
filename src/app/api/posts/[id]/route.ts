@@ -17,6 +17,23 @@ const postSchema = z.object({
   cover_image: z.string().optional(),
 })
 
+// 确保 posts 表有所有需要的字段
+async function ensurePostColumns() {
+  const columns = [
+    { name: "location", sql: `ALTER TABLE "posts" ADD COLUMN IF NOT EXISTS "location" TEXT` },
+    { name: "mood", sql: `ALTER TABLE "posts" ADD COLUMN IF NOT EXISTS "mood" TEXT` },
+    { name: "weather", sql: `ALTER TABLE "posts" ADD COLUMN IF NOT EXISTS "weather" TEXT` },
+    { name: "cover_image", sql: `ALTER TABLE "posts" ADD COLUMN IF NOT EXISTS "cover_image" TEXT` },
+  ]
+  for (const col of columns) {
+    try {
+      await pgPool.query(col.sql)
+    } catch (e: any) {
+      console.error(`[Posts] 添加 ${col.name} 字段失败:`, e.message)
+    }
+  }
+}
+
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -46,6 +63,9 @@ export async function PUT(
     if (!session || session.user.role !== "ADMIN") {
       return NextResponse.json({ error: "未授权" }, { status: 401 })
     }
+
+    // 确保所有字段都存在
+    await ensurePostColumns()
 
     const { id } = await params
     const body = await req.json()
