@@ -31,8 +31,9 @@ export async function GET(
       return NextResponse.json({ error: "文章不存在" }, { status: 404 })
     }
     return NextResponse.json(result.rows[0])
-  } catch {
-    return NextResponse.json({ error: "获取失败" }, { status: 500 })
+  } catch (e: any) {
+    console.error("[Posts] GET 错误:", e.message)
+    return NextResponse.json({ error: "获取失败: " + e.message }, { status: 500 })
   }
 }
 
@@ -55,17 +56,21 @@ export async function PUT(
       return NextResponse.json({ error: "Slug 已被使用" }, { status: 400 })
     }
 
+    // 使用 PostgreSQL 数组格式
+    const tagsArray = data.tags.length > 0 ? `{${data.tags.map(t => `"${t.replace(/"/g, '\\"')}"`).join(',')}}` : '{}'
+
     await pgPool.query(
       `UPDATE "posts" SET "title" = $1, "slug" = $2, "content" = $3, "excerpt" = $4, "published" = $5, "category" = $6, "tags" = $7, "updatedAt" = NOW(), "location" = $8, "mood" = $9, "weather" = $10, "cover_image" = $11 WHERE "id" = $12`,
-      [data.title, data.slug, data.content, data.excerpt || null, data.published, data.category, JSON.stringify(data.tags), data.location || null, data.mood || null, data.weather || null, data.cover_image || null, id]
+      [data.title, data.slug, data.content, data.excerpt || null, data.published, data.category, tagsArray, data.location || null, data.mood || null, data.weather || null, data.cover_image || null, id]
     )
 
     return NextResponse.json({ success: true })
-  } catch (error) {
+  } catch (error: any) {
+    console.error("[Posts] PUT 错误:", error)
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: error.errors[0].message }, { status: 400 })
     }
-    return NextResponse.json({ error: "更新失败" }, { status: 500 })
+    return NextResponse.json({ error: "更新失败: " + (error.message || "未知错误") }, { status: 500 })
   }
 }
 
@@ -82,7 +87,8 @@ export async function DELETE(
     const { id } = await params
     await pgPool.query(`DELETE FROM "posts" WHERE "id" = $1`, [id])
     return NextResponse.json({ success: true })
-  } catch {
-    return NextResponse.json({ error: "删除失败" }, { status: 500 })
+  } catch (e: any) {
+    console.error("[Posts] DELETE 错误:", e.message)
+    return NextResponse.json({ error: "删除失败: " + e.message }, { status: 500 })
   }
 }
