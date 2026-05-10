@@ -11,28 +11,7 @@ const postSchema = z.object({
   category: z.string().default("未分类"),
   tags: z.array(z.string()).default([]),
   published: z.boolean().default(false),
-  location: z.string().optional(),
-  mood: z.string().optional(),
-  weather: z.string().optional(),
-  cover_image: z.string().optional(),
 })
-
-// 确保 posts 表有所有需要的字段
-async function ensurePostColumns() {
-  const columns = [
-    { name: "location", sql: `ALTER TABLE "posts" ADD COLUMN IF NOT EXISTS "location" TEXT` },
-    { name: "mood", sql: `ALTER TABLE "posts" ADD COLUMN IF NOT EXISTS "mood" TEXT` },
-    { name: "weather", sql: `ALTER TABLE "posts" ADD COLUMN IF NOT EXISTS "weather" TEXT` },
-    { name: "cover_image", sql: `ALTER TABLE "posts" ADD COLUMN IF NOT EXISTS "cover_image" TEXT` },
-  ]
-  for (const col of columns) {
-    try {
-      await pgPool.query(col.sql)
-    } catch (e: any) {
-      console.error(`[Posts] 添加 ${col.name} 字段失败:`, e.message)
-    }
-  }
-}
 
 export async function GET(
   req: NextRequest,
@@ -64,12 +43,13 @@ export async function PUT(
       return NextResponse.json({ error: "未授权" }, { status: 401 })
     }
 
-    // 确保所有字段都存在
-    await ensurePostColumns()
-
     const { id } = await params
     const body = await req.json()
+    
+    console.log("[Posts] 收到更新请求:", { id, body })
+    
     const data = postSchema.parse(body)
+    console.log("[Posts] 数据验证通过:", data)
 
     // 检查文章是否存在
     const existingPost = await pgPool.query(`SELECT id FROM "posts" WHERE "id" = $1 LIMIT 1`, [id])
@@ -85,25 +65,17 @@ export async function PUT(
 
     // 使用 PostgreSQL 数组格式
     const tagsArray = data.tags.length > 0 ? `{${data.tags.map(t => `"${t.replace(/"/g, '\\"')}"`).join(',')}}` : '{}'
+    console.log("[Posts] tagsArray:", tagsArray)
 
-    // 一次性更新所有字段
-    await pgPool.query(
-      `UPDATE "posts" SET 
-        "title" = $1, 
-        "slug" = $2, 
-        "content" = $3, 
-        "excerpt" = $4, 
-        "published" = $5, 
-        "category" = $6, 
-        "tags" = $7, 
-        "updatedAt" = NOW(), 
-        "location" = $8, 
-        "mood" = $9, 
-        "weather" = $10, 
-        "cover_image" = $11 
-      WHERE "id" = $12`,
-      [data.title, data.slug, data.content, data.excerpt || null, data.published, data.category, tagsArray, data.location || null, data.mood || null, data.weather || null, data.cover_image || null, id]
-    )
+    // 只更新基础字段，不包含可选字段
+    const sql = `UPDATE "posts" SET "title" = $1, "slug" = $2, "content" = $3, "excerpt" = $4, "published" = $5, "category" = $6, "tags" = $7, "updatedAt" = NOW() WHERE "id" = $8`
+    const values = [data.title, data.slug, data.content, data.excerpt || null, data.published, data.category, tagsArray, id]
+    
+    console.log("[Posts] SQL:", sql)
+    console.log("[Posts] Values:", values)
+
+    const result = await pgPool.query(sql, values)
+    console.log("[Posts] 更新结果 rowCount:", result.rowCount)
 
     return NextResponse.json({ success: true })
   } catch (error: any) {

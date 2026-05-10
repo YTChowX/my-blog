@@ -117,10 +117,6 @@ export default function EditPostPage({ params }: { params: Promise<{ id: string 
           category,
           tags: tags.split(",").map((t) => t.trim()).filter(Boolean),
           published,
-          location,
-          mood,
-          weather,
-          cover_image: coverImage,
         }),
       })
 
