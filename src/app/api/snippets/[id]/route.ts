@@ -35,8 +35,9 @@ export async function GET(
     }
     
     return NextResponse.json(result.rows[0])
-  } catch {
-    return NextResponse.json({ error: "获取失败" }, { status: 500 })
+  } catch (e: any) {
+    console.error("[Snippets] GET 错误:", e.message)
+    return NextResponse.json({ error: "获取失败: " + e.message }, { status: 500 })
   }
 }
 
@@ -54,7 +55,7 @@ export async function PUT(
     const body = await req.json()
     const data = snippetSchema.parse(body)
 
-    await pgPool.query(
+    const result = await pgPool.query(
       `UPDATE "code_snippets" SET 
         "title" = $1, "description" = $2, "code" = $3, 
         "language" = $4, "tags" = $5, "is_public" = $6, 
@@ -63,12 +64,17 @@ export async function PUT(
       [data.title, data.description || null, data.code, data.language, JSON.stringify(data.tags), data.is_public, id]
     )
 
+    if (result.rowCount === 0) {
+      return NextResponse.json({ error: "代码片段不存在" }, { status: 404 })
+    }
+
     return NextResponse.json({ success: true })
-  } catch (error) {
+  } catch (error: any) {
+    console.error("[Snippets] PUT 错误:", error)
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: error.errors[0].message }, { status: 400 })
     }
-    return NextResponse.json({ error: "更新失败" }, { status: 500 })
+    return NextResponse.json({ error: "更新失败: " + (error.message || "未知错误") }, { status: 500 })
   }
 }
 
@@ -83,10 +89,15 @@ export async function DELETE(
     }
 
     const { id } = await params
-    await pgPool.query(`DELETE FROM "code_snippets" WHERE "id" = $1`, [id])
+    const result = await pgPool.query(`DELETE FROM "code_snippets" WHERE "id" = $1`, [id])
+    
+    if (result.rowCount === 0) {
+      return NextResponse.json({ error: "代码片段不存在" }, { status: 404 })
+    }
     
     return NextResponse.json({ success: true })
-  } catch {
-    return NextResponse.json({ error: "删除失败" }, { status: 500 })
+  } catch (e: any) {
+    console.error("[Snippets] DELETE 错误:", e.message)
+    return NextResponse.json({ error: "删除失败: " + e.message }, { status: 500 })
   }
 }

@@ -37,8 +37,9 @@ export async function GET(
     }
 
     return NextResponse.json(result.rows[0])
-  } catch {
-    return NextResponse.json({ error: "获取失败" }, { status: 500 })
+  } catch (e: any) {
+    console.error("[Products] GET 错误:", e.message)
+    return NextResponse.json({ error: "获取失败: " + e.message }, { status: 500 })
   }
 }
 
@@ -66,7 +67,7 @@ export async function PUT(
       return NextResponse.json({ error: "Slug 已被使用" }, { status: 400 })
     }
 
-    await pgPool.query(
+    const result = await pgPool.query(
       `UPDATE "products" SET 
         "name" = $1, "slug" = $2, "description" = $3, "price" = $4, 
         "original_price" = $5, "stock" = $6, "category_id" = $7, 
@@ -89,12 +90,17 @@ export async function PUT(
       ]
     )
 
+    if (result.rowCount === 0) {
+      return NextResponse.json({ error: "商品不存在" }, { status: 404 })
+    }
+
     return NextResponse.json({ success: true })
-  } catch (error) {
+  } catch (error: any) {
+    console.error("[Products] PUT 错误:", error)
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: error.errors[0].message }, { status: 400 })
     }
-    return NextResponse.json({ error: "更新失败" }, { status: 500 })
+    return NextResponse.json({ error: "更新失败: " + (error.message || "未知错误") }, { status: 500 })
   }
 }
 
@@ -110,10 +116,15 @@ export async function DELETE(
     }
 
     const { id } = await params
-    await pgPool.query(`DELETE FROM "products" WHERE "id" = $1`, [id])
-
+    const result = await pgPool.query(`DELETE FROM "products" WHERE "id" = $1`, [id])
+    
+    if (result.rowCount === 0) {
+      return NextResponse.json({ error: "商品不存在" }, { status: 404 })
+    }
+    
     return NextResponse.json({ success: true })
-  } catch {
-    return NextResponse.json({ error: "删除失败" }, { status: 500 })
+  } catch (e: any) {
+    console.error("[Products] DELETE 错误:", e.message)
+    return NextResponse.json({ error: "删除失败: " + e.message }, { status: 500 })
   }
 }
