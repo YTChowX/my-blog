@@ -17,23 +17,6 @@ const postSchema = z.object({
   cover_image: z.string().optional(),
 })
 
-// 确保 posts 表有所有需要的字段
-async function ensurePostColumns() {
-  const columns = [
-    { name: "location", sql: `ALTER TABLE "posts" ADD COLUMN IF NOT EXISTS "location" TEXT` },
-    { name: "mood", sql: `ALTER TABLE "posts" ADD COLUMN IF NOT EXISTS "mood" TEXT` },
-    { name: "weather", sql: `ALTER TABLE "posts" ADD COLUMN IF NOT EXISTS "weather" TEXT` },
-    { name: "cover_image", sql: `ALTER TABLE "posts" ADD COLUMN IF NOT EXISTS "cover_image" TEXT` },
-  ]
-  for (const col of columns) {
-    try {
-      await pgPool.query(col.sql)
-    } catch (e: any) {
-      console.error(`[Posts] 添加 ${col.name} 字段失败:`, e.message)
-    }
-  }
-}
-
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -58,39 +41,83 @@ export async function PUT(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const debugInfo: string[] = []
+  
   try {
+    debugInfo.push("1. 开始认证检查")
     const session = await auth()
     if (!session || session.user.role !== "ADMIN") {
       return NextResponse.json({ error: "未授权" }, { status: 401 })
     }
-
-    // 确保所有字段都存在
-    await ensurePostColumns()
+    debugInfo.push("2. 认证通过")
 
     const { id } = await params
+    debugInfo.push(`3. 文章ID: ${id}`)
+    
     const body = await req.json()
+    debugInfo.push(`4. 请求体: ${JSON.stringify(body).substring(0, 200)}`)
+    
     const data = postSchema.parse(body)
+    debugInfo.push("5. 数据验证通过")
 
+    // 检查文章是否存在
+    const existingPost = await pgPool.query(`SELECT id FROM "posts" WHERE "id" = $1 LIMIT 1`, [id])
+    if (existingPost.rows.length === 0) {
+      return NextResponse.json({ error: "文章不存在", debug: debugInfo }, { status: 404 })
+    }
+    debugInfo.push("6. 文章存在")
+
+    // 检查 slug 是否被其他文章使用
     const existing = await pgPool.query(`SELECT id FROM "posts" WHERE "slug" = $1 AND "id" != $2 LIMIT 1`, [data.slug, id])
     if (existing.rows.length > 0) {
-      return NextResponse.json({ error: "Slug 已被使用" }, { status: 400 })
+      return NextResponse.json({ error: "Slug 已被使用", debug: debugInfo }, { status: 400 })
     }
+    debugInfo.push("7. Slug 检查通过")
 
     // 使用 PostgreSQL 数组格式
     const tagsArray = data.tags.length > 0 ? `{${data.tags.map(t => `"${t.replace(/"/g, '\\"')}"`).join(',')}}` : '{}'
+    debugInfo.push(`8. Tags 格式: ${tagsArray.substring(0, 50)}`)
 
-    await pgPool.query(
-      `UPDATE "posts" SET "title" = $1, "slug" = $2, "content" = $3, "excerpt" = $4, "published" = $5, "category" = $6, "tags" = $7, "updatedAt" = NOW(), "location" = $8, "mood" = $9, "weather" = $10, "cover_image" = $11 WHERE "id" = $12`,
-      [data.title, data.slug, data.content, data.excerpt || null, data.published, data.category, tagsArray, data.location || null, data.mood || null, data.weather || null, data.cover_image || null, id]
-    )
+    // 先尝试简单更新（不含可选字段）
+    try {
+      await pgPool.query(
+        `UPDATE "posts" SET "title" = $1, "slug" = $2, "content" = $3, "excerpt" = $4, "published" = $5, "category" = $6, "tags" = $7, "updatedAt" = NOW() WHERE "id" = $8`,
+        [data.title, data.slug, data.content, data.excerpt || null, data.published, data.category, tagsArray, id]
+      )
+      debugInfo.push("9. 基础更新成功")
+    } catch (e: any) {
+      debugInfo.push(`9. 基础更新失败: ${e.message}`)
+      throw e
+    }
 
-    return NextResponse.json({ success: true })
+    // 尝试更新可选字段（忽略错误）
+    const optionalFields = [
+      { name: "location", value: data.location },
+      { name: "mood", value: data.mood },
+      { name: "weather", value: data.weather },
+      { name: "cover_image", value: data.cover_image },
+    ]
+    
+    for (const field of optionalFields) {
+      try {
+        await pgPool.query(
+          `UPDATE "posts" SET "${field.name}" = $1 WHERE "id" = $2`,
+          [field.value || null, id]
+        )
+        debugInfo.push(`10.${field.name} 更新成功`)
+      } catch (e: any) {
+        debugInfo.push(`10.${field.name} 更新失败: ${e.message}`)
+      }
+    }
+
+    return NextResponse.json({ success: true, debug: debugInfo })
   } catch (error: any) {
     console.error("[Posts] PUT 错误:", error)
+    debugInfo.push(`错误: ${error.message}`)
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: error.errors[0].message }, { status: 400 })
+      return NextResponse.json({ error: error.errors[0].message, debug: debugInfo }, { status: 400 })
     }
-    return NextResponse.json({ error: "更新失败: " + (error.message || "未知错误") }, { status: 500 })
+    return NextResponse.json({ error: "更新失败: " + (error.message || "未知错误"), debug: debugInfo }, { status: 500 })
   }
 }
 
