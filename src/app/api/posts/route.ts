@@ -34,18 +34,23 @@ export async function POST(req: NextRequest) {
     }
 
     const id = randomUUID()
+    
+    // 使用 PostgreSQL 数组格式
+    const tagsArray = data.tags.length > 0 ? `{${data.tags.map(t => `"${t.replace(/"/g, '\\"')}"`).join(',')}}` : '{}'
+    
     await pgPool.query(
       `INSERT INTO "posts" ("id", "title", "slug", "content", "excerpt", "published", "category", "tags", "authorId", "location", "mood", "weather", "cover_image")
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`,
-      [id, data.title, data.slug, data.content, data.excerpt || null, data.published, data.category, JSON.stringify(data.tags), session.user.id, data.location || null, data.mood || null, data.weather || null, data.cover_image || null]
+      [id, data.title, data.slug, data.content, data.excerpt || null, data.published, data.category, tagsArray, session.user.id, data.location || null, data.mood || null, data.weather || null, data.cover_image || null]
     )
 
     return NextResponse.json({ id, success: true }, { status: 201 })
-  } catch (error) {
+  } catch (error: any) {
+    console.error("[Posts] 创建文章失败:", error)
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: error.errors[0].message }, { status: 400 })
     }
-    return NextResponse.json({ error: "创建失败" }, { status: 500 })
+    return NextResponse.json({ error: "创建失败: " + (error.message || "未知错误") }, { status: 500 })
   }
 }
 
@@ -70,7 +75,8 @@ export async function GET(req: NextRequest) {
 
     const result = await pgPool.query(sql, params)
     return NextResponse.json(result.rows)
-  } catch {
-    return NextResponse.json({ error: "获取失败" }, { status: 500 })
+  } catch (e: any) {
+    console.error("[Posts] 获取文章失败:", e.message)
+    return NextResponse.json({ error: "获取失败: " + e.message }, { status: 500 })
   }
 }
